@@ -1,0 +1,17 @@
+{
+  "name": "gitcrib",
+  "version": "1.0.0",
+  "description": "A highly detailed, beautiful data-infographic poster generated dynamically via SVG for a developer's GitHub Profile README",
+  "main": "api/index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "preact": "^10.22.0",
+    "preact-render-to-string": "^6.5.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
