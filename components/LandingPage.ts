@@ -120,50 +120,128 @@ export function getLandingPageHtml(): string {
 
     /* Hero Section with 96px rhythm */
     .hero-section {
-      padding: 96px 2rem;
+      padding: 120px 2rem 80px 2rem;
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
       position: relative;
       background-color: var(--color-canvas);
+      background-image: 
+        radial-gradient(circle at 50% -20%, rgba(26, 38, 255, 0.15) 0%, transparent 50%),
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), 
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 40px 40px, 40px 40px;
+      background-position: center top;
+      border-bottom: 1px solid var(--color-hairline);
+    }
+
+    .hero-glow-1 {
+      position: absolute;
+      top: 10%;
+      left: 15%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+      filter: blur(50px);
+    }
+
+    .hero-glow-2 {
+      position: absolute;
+      bottom: 10%;
+      right: 15%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+      filter: blur(50px);
     }
 
     .hero-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.88px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
       text-transform: uppercase;
-      color: var(--color-body);
-      background-color: var(--color-surface-elevated);
-      padding: 4px 10px;
+      color: #a855f7;
+      background-color: rgba(168, 85, 247, 0.1);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      padding: 6px 14px;
       border-radius: 9999px;
       margin-bottom: 1.5rem;
       display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.1);
     }
 
     .hero-title {
-      font-size: 56px;
-      font-weight: 500;
-      line-height: 1.05;
-      letter-spacing: -1.68px;
+      font-size: 64px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -2px;
       color: var(--color-ink);
-      max-width: 800px;
+      max-width: 900px;
       margin-bottom: 1.5rem;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #a855f7 0%, #3b82f6 50%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     @media (max-width: 640px) {
       .hero-title {
-        font-size: 36px;
+        font-size: 38px;
         letter-spacing: -1px;
       }
     }
 
     .hero-subtitle {
-      font-size: 18px;
+      font-size: 19px;
       color: var(--color-body);
-      max-width: 600px;
-      margin-bottom: 3rem;
+      max-width: 650px;
+      margin-bottom: 2.5rem;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    /* Mini badges container */
+    .hero-badges {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .hero-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-ink);
+      backdrop-filter: blur(10px);
+      transition: all 0.2s ease;
+    }
+
+    .hero-badge:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
     }
 
     /* Main Grid: Control panel left, Preview right */
@@ -548,13 +626,36 @@ export function getLandingPageHtml(): string {
     </div>
   </nav>
 
-  <!-- Hero block (96px padding, Inter tracking -1.68px) -->
+  <!-- Hero block with premium dark grid and radial gradients -->
   <header class="hero-section">
-    <div class="hero-label">GITCRIB BLUEPRINT ORCHESTRATION</div>
-    <h1 class="hero-title">Developer Workspace Infographic Poster Engine</h1>
+    <div class="hero-glow-1"></div>
+    <div class="hero-glow-2"></div>
+    
+    <div class="hero-label">🚀 GITCRIB ORCHESTRATION ENGINE</div>
+    <h1 class="hero-title">Your GitHub Profile, Refactored as a <span class="gradient-text">Blueprint Poster</span></h1>
     <p class="hero-subtitle">
-      Generate extremely detailed visual blueprints of your GitHub career analytics, streaks, languages, and activity history.
+      Generate detailed, high-fidelity technical infographic blueprints tracking your coding streaks, languages, repos, and achievements.
     </p>
+
+    <!-- Mini-badges in Hero -->
+    <div class="hero-badges">
+      <div class="hero-badge">
+        <span class="badge-dot" style="background: #f59e0b;"></span>
+        <span>13 Achievements</span>
+      </div>
+      <div class="hero-badge">
+        <span class="badge-dot" style="background: #10b981;"></span>
+        <span>Dual Heatmaps</span>
+      </div>
+      <div class="hero-badge">
+        <span class="badge-dot" style="background: #a855f7;"></span>
+        <span>4 Visual Themes</span>
+      </div>
+      <div class="hero-badge">
+        <span class="badge-dot" style="background: #06b6d4;"></span>
+        <span>Edge Optimized</span>
+      </div>
+    </div>
   </header>
 
   <!-- Main grid layout -->
