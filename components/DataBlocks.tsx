@@ -190,19 +190,45 @@ export const ProfileHeader = ({
       />
 
       {/* Profile info text */}
-      <text x="530" y="55" fill="#ffffff" fontSize="24" fontFamily="sans-serif" fontWeight="700">
+      <text x="530" y="50" fill="#ffffff" fontSize="22" fontFamily="sans-serif" fontWeight="700">
         {name || username}
       </text>
-      <text x="530" y="78" fill={colors.accent1} fontSize="14" fontFamily="monospace" fontWeight="500">
-        @{username.toUpperCase()}{devClass ? ' // ' + devClass.toUpperCase() : ''}
+      <text x="530" y="68" fill={colors.accent1} fontSize="11" fontFamily="monospace" fontWeight="500">
+        @{username.toUpperCase()}
       </text>
-      <text x="530" y="105" fill="#a8a8a8" fontSize="13" fontFamily="sans-serif" width="220">
-        {bio || 'Building the future, one commit at a time.'}
-      </text>
+      {devClass && (
+        <text x="530" y="82" fill={colors.stroke} fontSize="9" fontFamily="monospace" fontWeight="600" letterSpacing="0.5">
+          {devClass.toUpperCase()}
+        </text>
+      )}
+      {(() => {
+        const wrapBio = (text: string, maxLen: number = 32): string[] => {
+          if (!text) return [];
+          const words = text.split(' ');
+          const lines: string[] = [];
+          let currentLine = '';
+          words.forEach(word => {
+            if ((currentLine + ' ' + word).trim().length <= maxLen) {
+              currentLine = (currentLine + ' ' + word).trim();
+            } else {
+              if (currentLine) lines.push(currentLine);
+              currentLine = word;
+            }
+          });
+          if (currentLine) lines.push(currentLine);
+          return lines.slice(0, 2);
+        };
+        const bioLines = wrapBio(bio || 'Building the future, one commit at a time.');
+        return bioLines.map((line, idx) => (
+          <text key={idx} x="530" y={100 + idx * 13} fill="#a8a8a8" fontSize="11" fontFamily="sans-serif">
+            {line}
+          </text>
+        ));
+      })()}
 
       {/* Metadata Columns */}
-      {/* Column 1 (x: 770) */}
-      <g transform="translate(770, 25)">
+      {/* Column 1 (x: 810) */}
+      <g transform="translate(810, 25)">
         {/* Row 1: Joined */}
         <g transform="translate(0, 0)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ color: colors.stroke }}>
@@ -231,8 +257,8 @@ export const ProfileHeader = ({
         </g>
       </g>
 
-      {/* Column 2 (x: 960) */}
-      <g transform="translate(960, 25)">
+      {/* Column 2 (x: 980) */}
+      <g transform="translate(980, 25)">
         {/* Row 1: Followers & Following */}
         <g transform="translate(0, 0)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ color: colors.stroke }}>
@@ -1081,8 +1107,24 @@ export const FooterBlocks = ({
         <text x="0" y="0" fill={colors.stroke} fontSize="13" fontFamily="sans-serif" fontWeight="800">
           ABOUT
         </text>
-        <text x="0" y="24" fill="#a8a8a8" fontSize="11" fontFamily="sans-serif" width="240">
-          {aboutText || 'Full Stack Developer | AI & Automation Builder of modern web apps, AI tools, and productivity solutions.'}
+        <text x="0" y="24" fill="#a8a8a8" fontSize="11" fontFamily="sans-serif">
+          {(() => {
+            const words = (aboutText || 'Full Stack Developer | AI & Automation Builder of modern web apps, AI tools, and productivity solutions.').split(/\s+/);
+            const lines: string[] = [];
+            let currentLine = '';
+            for (const word of words) {
+              if ((currentLine + ' ' + word).trim().length <= 36) {
+                currentLine = (currentLine + ' ' + word).trim();
+              } else {
+                if (currentLine) lines.push(currentLine);
+                currentLine = word;
+              }
+            }
+            if (currentLine) lines.push(currentLine);
+            return lines.slice(0, 3).map((line, idx) => (
+              <tspan x="0" dy={idx === 0 ? 0 : 15} key={idx}>{line}</tspan>
+            ));
+          })()}
         </text>
 
         {/* Code loop block */}

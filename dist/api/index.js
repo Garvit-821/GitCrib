@@ -87,6 +87,360 @@ function getDeterministicStats(username) {
         pushHistory
     };
 }
+async function scrapeGithubProfile(username) {
+    try {
+        const url = `https://github.com/${username}`;
+        const res = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        });
+        if (!res.ok) {
+            throw new Error(`Profile HTTP status: ${res.status}`);
+        }
+        const html = await res.text();
+        const nameMatch = html.match(/itemprop="name"[^>]*>\s*([^<\n\r]+)/);
+        const name = nameMatch ? nameMatch[1].trim() : username.toUpperCase();
+        const avatarMatch = html.match(/class="[^"]*avatar-user[^"]*"[^>]*src="([^"]+)"/);
+        const avatarUrl = avatarMatch ? avatarMatch[1].replace(/&amp;/g, '&') : `https://avatars.githubusercontent.com/u/${hashString(username) % 999999}?v=4`;
+        const bioMatch = html.match(/class="[^"]*user-profile-bio[^"]*"[^>]*><div>([\s\S]*?)<\/div>/);
+        const bio = bioMatch ? bioMatch[1].trim().replace(/&amp;/g, '&') : 'Developer // Innovator';
+        const followersMatch = html.match(/href="[^"]+\?tab=followers"[^>]*>[\s\S]*?<span[^>]*>([\d,]+)<\/span>[\s\S]*?followers/i);
+        const followers = followersMatch ? parseInt(followersMatch[1].replace(/,/g, ''), 10) : 0;
+        const followingMatch = html.match(/href="[^"]+\?tab=following"[^>]*>[\s\S]*?<span[^>]*>([\d,]+)<\/span>[\s\S]*?following/i);
+        const following = followingMatch ? parseInt(followingMatch[1].replace(/,/g, ''), 10) : 0;
+        const blogMatch = html.match(/itemprop="url"[^>]*>[\s\S]*?<a[^>]*href="([^"]+)"/);
+        const blog = blogMatch ? blogMatch[1] : `github.com/${username}`;
+        const portfolioUrl = blog.startsWith('http') ? blog : `https://${blog}`;
+        const websiteUrl = `github.com/${username}`;
+        const email = `contact@${username.toLowerCase()}.dev`;
+        const locationMatch = html.match(/itemprop="homeLocation"[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/);
+        const location = locationMatch ? locationMatch[1].trim() : 'Earth';
+        const repoCountRegex = new RegExp(`href="\\/${username}\\?tab=repositories"[^>]*>[\\s\\S]*?<span[^>]*>(\\d+)<\\/span>`, 'i');
+        const repoCountMatch = html.match(repoCountRegex);
+        const publicRepos = repoCountMatch ? parseInt(repoCountMatch[1], 10) : 10;
+        const pinnedBlocks = html.match(/<div class="pinned-item-list-item-content">[\s\S]*?<\/p>\s*<\/div>/g) || [];
+        const repos = [];
+        pinnedBlocks.forEach(block => {
+            const nMatch = block.match(/<span class="repo">([^<]+)<\/span>/);
+            if (nMatch) {
+                const n = nMatch[1].trim();
+                const starMatch = block.match(/href="[^"]+\/stargazers"[^>]*>[\s\S]*?<\/svg>\s*([\d,]+)/i) ||
+                    block.match(/aria-label="star"[^>]*>[\s\S]*?<\/svg>\s*([\d,]+)/i);
+                const stars = starMatch ? parseInt(starMatch[1].replace(/,/g, ''), 10) : 0;
+                repos.push({ name: n, stars });
+            }
+        });
+        const langCounts = {};
+        const langRegex = /<span itemprop="programmingLanguage">([^<]+)<\/span>/g;
+        let langMatch;
+        while ((langMatch = langRegex.exec(html)) !== null) {
+            const lang = langMatch[1].trim();
+            langCounts[lang] = (langCounts[lang] || 0) + 1;
+        }
+        const totalLangs = Object.values(langCounts).reduce((a, b) => a + b, 0);
+        let languages = Object.entries(langCounts)
+            .map(([name, count]) => {
+            const percentage = Math.round((count / (totalLangs || 1)) * 1000) / 10;
+            const color = colorMap[name.toLowerCase()] || '#666666';
+            return { name, percentage, color };
+        })
+            .sort((a, b) => b.percentage - a.percentage);
+        if (languages.length === 0) {
+            languages = [
+                { name: 'JavaScript', percentage: 45.1, color: '#f7df1e' },
+                { name: 'HTML', percentage: 23.7, color: '#e34f26' },
+                { name: 'CSS', percentage: 12.4, color: '#1572b6' },
+                { name: 'Python', percentage: 8.6, color: '#3776ab' },
+                { name: 'Other', percentage: 10.2, color: '#666666' }
+            ];
+        }
+        const stars = repos.reduce((sum, r) => sum + r.stars, 0);
+        const score = (stars * 5) + (followers * 2) + publicRepos;
+        let grade = 'B-';
+        if (score > 1000)
+            grade = 'A+';
+        else if (score > 500)
+            grade = 'A';
+        else if (score > 250)
+            grade = 'A-';
+        else if (score > 120)
+            grade = 'B+';
+        else if (score > 60)
+            grade = 'B';
+        return {
+            success: true,
+            name,
+            avatarUrl,
+            bio,
+            joinedDate: 'Jan 19, 2021', // scraper fallback default
+            followers,
+            following,
+            stars,
+            languages,
+            repos,
+            publicRepos,
+            gists: 0,
+            portfolioUrl,
+            websiteUrl,
+            email,
+            location,
+            grade
+        };
+    }
+    catch (error) {
+        console.warn(`[GitHub Scraper] Failed to scrape public profile for "${username}":`, error);
+        return { success: false };
+    }
+}
+async function fetchContributionCalendar(username) {
+    try {
+        const url = `https://github.com/users/${username}/contributions`;
+        const res = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        });
+        if (!res.ok) {
+            throw new Error(`Contributions calendar HTTP status: ${res.status}`);
+        }
+        const html = await res.text();
+        const totalMatch = html.match(/(\d+)\s+contributions\s+in\s+the\s+last\s+year/i);
+        let totalContributions = totalMatch ? parseInt(totalMatch[1], 10) : 0;
+        const tooltipRegex = /<tool-tip[^>]*for="([^"]+)"[^>]*>([^<]+)<\/tool-tip>/g;
+        const tooltipMap = new Map();
+        let match;
+        while ((match = tooltipRegex.exec(html)) !== null) {
+            const id = match[1];
+            const text = match[2];
+            const countMatch = text.match(/^(\d+|No)\s+contribution/i);
+            if (countMatch) {
+                const val = countMatch[1].toLowerCase() === 'no' ? 0 : parseInt(countMatch[1], 10);
+                tooltipMap.set(id, val);
+            }
+        }
+        const tdTags = html.match(/<td[^>]*class="[^"]*ContributionCalendar-day[^"]*"[^>]*>/g) || [];
+        const dayMap = new Map();
+        tdTags.forEach(tag => {
+            const dateMatch = tag.match(/data-date="([^"]+)"/);
+            const idMatch = tag.match(/id="([^"]+)"/);
+            const levelMatch = tag.match(/data-level="([^"]+)"/);
+            if (dateMatch) {
+                const date = dateMatch[1];
+                const id = idMatch ? idMatch[1] : '';
+                const level = levelMatch ? parseInt(levelMatch[1], 10) : 0;
+                const count = id ? (tooltipMap.get(id) ?? (level > 0 ? level * 2 : 0)) : (level > 0 ? level * 2 : 0);
+                dayMap.set(date, { date, level, count });
+            }
+        });
+        const sortedDays = Array.from(dayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+        if (totalContributions === 0) {
+            totalContributions = sortedDays.reduce((sum, d) => sum + d.count, 0);
+        }
+        let runningStreak = 0;
+        let longestStreak = 0;
+        sortedDays.forEach(d => {
+            if (d.count > 0) {
+                runningStreak++;
+                if (runningStreak > longestStreak) {
+                    longestStreak = runningStreak;
+                }
+            }
+            else {
+                runningStreak = 0;
+            }
+        });
+        let currentStreak = 0;
+        let active = false;
+        let tempStreak = 0;
+        for (let i = sortedDays.length - 1; i >= 0; i--) {
+            if (sortedDays[i].count > 0) {
+                tempStreak++;
+                active = true;
+            }
+            else {
+                if (active)
+                    break;
+                if (sortedDays.length - 1 - i > 1) { // 1 day grace
+                    break;
+                }
+            }
+        }
+        currentStreak = tempStreak;
+        let streakDateRange = '';
+        if (currentStreak > 0) {
+            let lastActiveIdx = sortedDays.length - 1;
+            while (lastActiveIdx >= 0 && sortedDays[lastActiveIdx].count === 0) {
+                lastActiveIdx--;
+            }
+            const endActive = sortedDays[lastActiveIdx];
+            const startActive = sortedDays[lastActiveIdx - currentStreak + 1];
+            if (startActive && endActive) {
+                streakDateRange = `${formatDateRange(startActive.date)} - ${formatDateRange(endActive.date)}`;
+            }
+        }
+        let longestStreakDateRange = '';
+        if (longestStreak > 0) {
+            let maxStartIdx = 0;
+            let maxEndIdx = 0;
+            let curStartIdx = -1;
+            let curStreak = 0;
+            sortedDays.forEach((d, idx) => {
+                if (d.count > 0) {
+                    if (curStartIdx === -1)
+                        curStartIdx = idx;
+                    curStreak++;
+                    if (curStreak === longestStreak) {
+                        maxStartIdx = curStartIdx;
+                        maxEndIdx = idx;
+                    }
+                }
+                else {
+                    curStartIdx = -1;
+                    curStreak = 0;
+                }
+            });
+            const startD = sortedDays[maxStartIdx];
+            const endD = sortedDays[maxEndIdx];
+            if (startD && endD) {
+                longestStreakDateRange = `${formatDateRange(startD.date)} - ${formatDateRange(endD.date)}`;
+            }
+        }
+        const last15Days = sortedDays.slice(-15);
+        const contributionsHistory = last15Days.map(d => d.count);
+        while (contributionsHistory.length < 15) {
+            contributionsHistory.unshift(0);
+        }
+        const commitData = sortedDays.slice(-371).map(d => d.count);
+        while (commitData.length < 371) {
+            commitData.unshift(0);
+        }
+        const monthlyGroups = new Map();
+        sortedDays.forEach(d => {
+            const monthKey = d.date.substring(0, 7);
+            monthlyGroups.set(monthKey, (monthlyGroups.get(monthKey) || 0) + d.count);
+        });
+        const sortedMonthKeys = Array.from(monthlyGroups.keys()).sort();
+        const last12MonthsKeys = sortedMonthKeys.slice(-12);
+        const pushHistory = last12MonthsKeys.map(key => monthlyGroups.get(key) || 0);
+        while (pushHistory.length < 12) {
+            pushHistory.unshift(0);
+        }
+        return {
+            success: true,
+            totalContributions,
+            currentStreak,
+            longestStreak,
+            streakDateRange: streakDateRange || 'N/A',
+            longestStreakDateRange: longestStreakDateRange || 'N/A',
+            contributionsHistory,
+            commitData,
+            pushHistory
+        };
+    }
+    catch (error) {
+        console.warn(`[GitHub Scraper] Failed to fetch contribution calendar for "${username}":`, error);
+        return { success: false };
+    }
+}
+function formatDateRange(dateStr) {
+    try {
+        const d = new Date(dateStr);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${months[d.getUTCMonth()]} ${d.getUTCDate()}`;
+    }
+    catch {
+        return dateStr;
+    }
+}
+async function fetchAvatarAsBase64(url) {
+    try {
+        const res = await fetch(url);
+        if (!res.ok)
+            return url;
+        const contentType = res.headers.get('content-type') || 'image/png';
+        const buffer = await res.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+        return `data:${contentType};base64,${base64}`;
+    }
+    catch (err) {
+        console.warn('Failed to fetch avatar for base64 encoding:', err);
+        return url;
+    }
+}
+async function callGeminiDeveloperAnalysis(username, name, bio, publicRepos, followers, totalContributions, languages, repos) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey)
+        return null;
+    try {
+        const prompt = `You are GitCrib AI, an expert developer analyst.
+Analyze the following GitHub profile data for username: "${username}":
+Name: "${name}"
+Bio: "${bio}"
+Public Repositories: ${publicRepos}
+Followers: ${followers}
+Total Contributions (Last Year): ${totalContributions}
+Top Languages: ${JSON.stringify(languages.slice(0, 5))}
+Top Repositories: ${JSON.stringify(repos.slice(0, 5))}
+
+Based on this data, generate:
+1. A short, creative, professional Developer Bio (maximum 120 characters).
+2. A Developer Class (e.g., "Full Stack Engineer", "Systems Architect", "Machine Learning Practitioner", etc.) - maximum 30 characters.
+3. An "About Text" summary of their coding style, expertise, and focus areas (maximum 200 characters).
+4. A "Coding Personality" (e.g., "Code Machine", "Elegant Optimizer", "AI Synthesizer", "OS Crusader") - maximum 25 characters.
+5. An "Estimated Rank" (e.g., "Grandmaster Kernel Hacker", "Principal Systems Architect", "Lead Developer", "Elite Open Source Builder") - maximum 30 characters.
+
+Return the response strictly as a JSON object with keys:
+"bio", "devClass", "aboutText", "personality", "rank"
+Do not include any markdown formatting, code blocks, or comments in your response. Just the raw JSON object.`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [
+                    {
+                        parts: [
+                            {
+                                text: prompt
+                            }
+                        ]
+                    }
+                ],
+                generationConfig: {
+                    responseMimeType: 'application/json'
+                }
+            })
+        });
+        if (!res.ok) {
+            throw new Error(`Gemini API HTTP status: ${res.status}`);
+        }
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) {
+            throw new Error('Empty response from Gemini');
+        }
+        const parsed = JSON.parse(text);
+        return {
+            bio: parsed.bio || bio,
+            devClass: parsed.devClass || 'Developer',
+            aboutText: parsed.aboutText || bio,
+            personality: parsed.personality || 'System Architect',
+            rank: parsed.rank || 'Senior Developer'
+        };
+    }
+    catch (error) {
+        console.warn('[Gemini AI] Failed to perform developer analysis:', error);
+        return null;
+    }
+}
 async function fetchGithubStats(username) {
     const profileUrl = `https://api.github.com/users/${username}`;
     const reposUrl = `https://api.github.com/users/${username}/repos?per_page=100`;
@@ -103,7 +457,6 @@ async function fetchGithubStats(username) {
         const name = profile.name || username.toUpperCase();
         const avatarUrl = profile.avatar_url;
         const bio = profile.bio || 'Building the future, one commit at a time.';
-        // Parse Joined Date
         const createdDate = new Date(profile.created_at);
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const joinedDate = `${months[createdDate.getMonth()]} ${createdDate.getDate()}, ${createdDate.getFullYear()}`;
@@ -153,7 +506,6 @@ async function fetchGithubStats(username) {
                 { name: 'Other', percentage: 10.2, color: '#666666' }
             ];
         }
-        // Grade logic
         const score = (stars * 5) + (followers * 2) + publicRepos;
         let grade = 'B-';
         if (score > 1000)
@@ -187,8 +539,8 @@ async function fetchGithubStats(username) {
         };
     }
     catch (error) {
-        console.warn(`[GitHub API] Rate Limited (403) or offline. Serving offline fallback stats for "${username}".`);
-        return { success: false };
+        console.warn(`[GitHub API] Failed. Falling back to scraping for profile stats of "${username}".`);
+        return await scrapeGithubProfile(username);
     }
 }
 export default async function handler(req) {
@@ -203,82 +555,137 @@ export default async function handler(req) {
             },
         });
     }
-    // Handle case-insensitive user matching
     const username = usernameParam;
-    // Fetch live stats from GitHub
+    const geminiParam = url.searchParams.get('gemini');
+    const useGemini = geminiParam === 'true';
+    // 1. Fetch profile stats
     const github = await fetchGithubStats(username);
-    // Deterministic statistics mapping
+    // 2. Fetch contribution calendar stats
+    const calendar = await fetchContributionCalendar(username);
+    // Deterministic fallback
     const det = getDeterministicStats(username);
-    // Fallback structures specifically tailored to match Garvit-821's exact stats from mockup image
-    const isGarvit = username.toLowerCase() === 'garvit-821';
-    const name = isGarvit ? 'GARVIT PRAKASH' : (github.success ? github.name : username.toUpperCase());
-    const avatarUrl = github.success ? github.avatarUrl : `https://avatars.githubusercontent.com/u/${hashString(username) % 999999}?v=4`;
-    const bio = isGarvit ? 'Building the future, one commit at a time.' : (github.success ? github.bio : 'Developer // Innovator');
-    const joinedDate = isGarvit ? 'Jan 19, 2021' : (github.success ? github.joinedDate : det.joinedDate);
-    const followers = isGarvit ? 18 : (github.success ? github.followers : 12);
-    const following = isGarvit ? 12 : (github.success ? github.following : 8);
-    const devClassParam = url.searchParams.get('devClass');
-    const devClass = devClassParam || (isGarvit ? 'Full Stack Developer' : (github.success ? 'GitHub Contributor' : 'Senior Core Engineer'));
+    // Resolve values
+    const hasLiveProfile = github.success;
+    const hasLiveCalendar = calendar.success;
+    const name = hasLiveProfile ? github.name : username.toUpperCase();
+    const avatarUrlRaw = hasLiveProfile ? github.avatarUrl : `https://avatars.githubusercontent.com/u/${hashString(username) % 999999}?v=4`;
+    let avatarUrl = avatarUrlRaw;
+    if (avatarUrlRaw.startsWith('http')) {
+        avatarUrl = await fetchAvatarAsBase64(avatarUrlRaw);
+    }
+    const bio = hasLiveProfile ? github.bio : 'Developer // Innovator';
+    const joinedDate = hasLiveProfile ? github.joinedDate : det.joinedDate;
+    const followers = hasLiveProfile ? github.followers : 12;
+    const following = hasLiveProfile ? github.following : 8;
     const starsParam = url.searchParams.get('stars');
-    const stars = starsParam ? parseInt(starsParam, 10) : (isGarvit ? 68 : (github.success ? github.stars : 45));
-    const commits = isGarvit ? 130 : det.commits;
-    const prs = isGarvit ? 5 : det.prs;
-    const issues = isGarvit ? 0 : det.issues;
-    const contributedTo = isGarvit ? 0 : det.contributedTo;
-    const grade = isGarvit ? 'B-' : (github.success ? github.grade : 'B');
-    const totalContributions = isGarvit ? 251 : det.totalContributions;
-    const currentStreak = isGarvit ? 10 : det.currentStreak;
-    const longestStreak = isGarvit ? 10 : det.longestStreak;
-    const streakDateRange = isGarvit ? 'Jun 25 - Jul 4' : det.streakDateRange;
-    const longestStreakDateRange = isGarvit ? 'Jan 25 - Jul 4' : det.longestStreakDateRange;
-    const contributionsHistory = isGarvit ? [2, 5, 3, 8, 2, 4, 12, 18, 5, 9, 14, 8, 12, 5, 7] : det.contributionsHistory;
-    const languages = isGarvit ? [
-        { name: 'JavaScript', percentage: 45.1, color: '#f7df1e' },
-        { name: 'HTML', percentage: 23.7, color: '#e34f26' },
-        { name: 'CSS', percentage: 12.4, color: '#1572b6' },
-        { name: 'Python', percentage: 8.6, color: '#3776ab' },
-        { name: 'Other', percentage: 10.2, color: '#666666' }
-    ] : (github.success ? github.languages : [
+    const stars = starsParam ? parseInt(starsParam, 10) : (hasLiveProfile ? github.stars : 45);
+    const totalContributions = hasLiveCalendar ? calendar.totalContributions : det.totalContributions;
+    const currentStreak = hasLiveCalendar ? calendar.currentStreak : det.currentStreak;
+    const longestStreak = hasLiveCalendar ? calendar.longestStreak : det.longestStreak;
+    const streakDateRange = hasLiveCalendar ? calendar.streakDateRange : det.streakDateRange;
+    const longestStreakDateRange = hasLiveCalendar ? calendar.longestStreakDateRange : det.longestStreakDateRange;
+    const contributionsHistory = hasLiveCalendar ? calendar.contributionsHistory : det.contributionsHistory;
+    const commitData = hasLiveCalendar ? calendar.commitData : det.commitData;
+    const pushHistory = hasLiveCalendar ? calendar.pushHistory : det.pushHistory;
+    // Search API or local estimation for commits, prs, issues, reviews
+    let commits = Math.round(totalContributions * 0.8) || det.commits;
+    let prs = Math.round(totalContributions * 0.15) || det.prs;
+    let issues = Math.round(totalContributions * 0.05) || det.issues;
+    let contributedTo = hasLiveProfile ? (github.repos ? Math.min(github.repos.length, 5) : 0) : det.contributedTo;
+    const headers = {
+        'User-Agent': 'GitCrib-Analytics-Engine',
+        ...(process.env.GITHUB_TOKEN ? { 'Authorization': `token ${process.env.GITHUB_TOKEN}` } : {})
+    };
+    try {
+        const searchCommitsUrl = `https://api.github.com/search/commits?q=author:${username}`;
+        const searchCommitsRes = await fetch(searchCommitsUrl, {
+            headers: {
+                ...headers,
+                'Accept': 'application/vnd.github.cloak-preview'
+            }
+        });
+        if (searchCommitsRes.ok) {
+            const data = await searchCommitsRes.json();
+            if (typeof data.total_count === 'number') {
+                commits = data.total_count;
+            }
+        }
+        const searchPRsUrl = `https://api.github.com/search/issues?q=author:${username}+type:pr`;
+        const searchPRsRes = await fetch(searchPRsUrl, { headers });
+        if (searchPRsRes.ok) {
+            const data = await searchPRsRes.json();
+            if (typeof data.total_count === 'number') {
+                prs = data.total_count;
+            }
+        }
+        const searchIssuesUrl = `https://api.github.com/search/issues?q=author:${username}+type:issue`;
+        const searchIssuesRes = await fetch(searchIssuesUrl, { headers });
+        if (searchIssuesRes.ok) {
+            const data = await searchIssuesRes.json();
+            if (typeof data.total_count === 'number') {
+                issues = data.total_count;
+            }
+        }
+    }
+    catch (err) {
+        // Ignore search api errors, keep fallbacks
+    }
+    const grade = hasLiveProfile ? github.grade : 'B';
+    const languages = hasLiveProfile ? github.languages : [
         { name: 'JavaScript', percentage: 65, color: '#f7df1e' },
         { name: 'HTML', percentage: 20, color: '#e34f26' },
         { name: 'CSS', percentage: 15, color: '#1572b6' }
-    ]);
-    const repos = isGarvit ? [
-        { name: 'gpdev.in', stars: 23 },
-        { name: 'ai-document-analyzer', stars: 12 },
-        { name: 'hackhub', stars: 8 },
-        { name: 'gpGenie', stars: 7 },
-        { name: 'obsidian-chatroom', stars: 6 }
-    ] : (github.success ? github.repos.slice(0, 5) : [
+    ];
+    const repos = hasLiveProfile ? github.repos.slice(0, 5) : [
         { name: 'repo-alpha', stars: 10 },
         { name: 'repo-beta', stars: 5 }
-    ]);
-    const totalReposCount = isGarvit ? 20 : (github.success ? github.publicRepos : 2);
+    ];
+    const totalReposCount = hasLiveProfile ? github.publicRepos : 2;
     const activityPRs = prs;
-    const activityIssuesOpened = isGarvit ? 0 : Math.floor(issues * 0.4);
-    const activityIssuesClosed = isGarvit ? 0 : Math.floor(issues * 0.6);
+    const activityIssuesOpened = Math.floor(issues * 0.4);
+    const activityIssuesClosed = Math.floor(issues * 0.6);
     const activityReposContributed = contributedTo;
-    const activityReposOwned = totalReposCount - contributedTo;
-    const activityTotalWatchers = isGarvit ? 23 : stars + 5;
-    const commitData = isGarvit ? [
-        // 371 days heatmap values, with some nice pattern
-        ...Array.from({ length: 371 }, (_, i) => (i % 7 === 1 || i % 11 === 0 || i % 19 === 0) ? Math.floor((Math.sin(i / 10) + 1.2) * 5) : 0)
-    ] : det.commitData;
-    const pushHistory = isGarvit ? [10, 20, 15, 20, 12, 16, 25, 20, 14, 18, 38, 75] : det.pushHistory;
+    const activityReposOwned = Math.max(0, totalReposCount - contributedTo);
+    const activityTotalWatchers = stars + 5;
     const reviewsParam = url.searchParams.get('reviews');
-    const reviews = reviewsParam ? parseInt(reviewsParam, 10) : (isGarvit ? 2 : det.reviews);
-    const starsGiven = isGarvit ? 12 : det.starsGiven;
-    const gists = isGarvit ? 3 : (github.success ? github.gists : 1);
-    const orgs = isGarvit ? '-' : (hashString(username) % 3 === 0 ? '1' : '-');
-    const projects = isGarvit ? 4 : det.projects;
-    const packages = isGarvit ? 1 : det.packages;
-    const aboutText = isGarvit
-        ? 'Full Stack Developer | AI & Automation Builder of modern web apps, AI tools, and productivity solutions.'
-        : (github.success ? github.bio : 'Full Stack developer constructing tools at speed.');
-    const portfolioUrl = isGarvit ? 'https://dev.gpdev.in' : (github.success ? github.portfolioUrl : `github.com/${username}`);
-    const websiteUrl = isGarvit ? 'https://gpdev.in' : (github.success ? github.websiteUrl : `github.com/${username}`);
-    const email = isGarvit ? 'contact@gpdev.in' : (github.success ? github.email : `contact@${username.toLowerCase()}.dev`);
-    const location = isGarvit ? 'Delhi, India' : (github.success ? github.location : 'Earth');
+    const reviews = reviewsParam ? parseInt(reviewsParam, 10) : det.reviews;
+    const starsGiven = det.starsGiven;
+    const gists = hasLiveProfile ? github.gists : 1;
+    const orgs = hashString(username) % 3 === 0 ? '1' : '-';
+    const projects = det.projects;
+    const packages = det.packages;
+    const portfolioUrl = hasLiveProfile ? github.portfolioUrl : `github.com/${username}`;
+    const websiteUrl = hasLiveProfile ? github.websiteUrl : `github.com/${username}`;
+    const email = hasLiveProfile ? github.email : `contact@${username.toLowerCase()}.dev`;
+    const location = hasLiveProfile ? github.location : 'Earth';
+    // 3. Call Gemini developer analysis
+    let geminiData = null;
+    if (useGemini && process.env.GEMINI_API_KEY) {
+        geminiData = await callGeminiDeveloperAnalysis(username, name, bio, totalReposCount, followers, totalContributions, languages, repos);
+    }
+    let calculatedDevClass = 'Senior Core Engineer';
+    if (languages && languages.length > 0) {
+        const topLang = languages[0].name.toLowerCase();
+        if (['typescript', 'javascript'].includes(topLang)) {
+            calculatedDevClass = 'Full Stack Engineer';
+        }
+        else if (['python', 'r'].includes(topLang)) {
+            calculatedDevClass = 'AI & Data Specialist';
+        }
+        else if (['rust', 'go', 'c++', 'c'].includes(topLang)) {
+            calculatedDevClass = 'Systems Architect';
+        }
+        else if (['java', 'kotlin'].includes(topLang)) {
+            calculatedDevClass = 'Enterprise Developer';
+        }
+        else if (['html', 'css'].includes(topLang)) {
+            calculatedDevClass = 'Frontend Engineer';
+        }
+    }
+    const devClassParam = url.searchParams.get('devClass');
+    const devClass = devClassParam || (geminiData ? geminiData.devClass : calculatedDevClass);
+    const calculatedAboutText = bio || 'Open source contributor building technical solutions.';
+    const aboutText = geminiData ? geminiData.aboutText : calculatedAboutText;
     const themeParam = url.searchParams.get('theme') || 'blueprint';
     const theme = (['blueprint', 'cyberpunk', 'matrix', 'amber'].includes(themeParam))
         ? themeParam
@@ -297,7 +704,7 @@ export default async function handler(req) {
         forks: 0,
         issues: 0,
         watchers: 0,
-        size: isGarvit ? Math.round(5950 / languages.length) : 1000,
+        size: 1000,
         createdAt: '',
         updatedAt: '',
         topics: [],
@@ -307,10 +714,10 @@ export default async function handler(req) {
         profile: {
             name,
             username,
-            createdAt: isGarvit ? '2021-01-19T00:00:00Z' : '2021-08-15T00:00:00Z',
+            createdAt: '2021-01-19T00:00:00Z',
             followers,
             following,
-            orgCount: isGarvit ? 0 : (orgs === '-' ? 0 : 1),
+            orgCount: orgs === '-' ? 0 : 1,
             pinnedRepos: [],
             profileLink: `https://github.com/${username}`,
             hireable: true
@@ -337,12 +744,12 @@ export default async function handler(req) {
             packages,
             releases: 0,
             projects,
-            discussions: isGarvit ? 13 : 0,
+            discussions: 0,
             codeReviews: reviews,
             starsGiven,
             reposCreated: totalReposCount,
-            avgCommitsFreq: isGarvit ? 3.2 : (commits / 365),
-            avgContributionsFreq: isGarvit ? 4.1 : (totalContributions / 365)
+            avgCommitsFreq: commits / 365,
+            avgContributionsFreq: totalContributions / 365
         },
         repos: payloadRepos,
         commitData,
@@ -353,7 +760,7 @@ export default async function handler(req) {
         username,
         name,
         avatarUrl,
-        bio,
+        bio: geminiData ? geminiData.bio : bio,
         joinedDate,
         devClass,
         followers,

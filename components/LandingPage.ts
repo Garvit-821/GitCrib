@@ -692,6 +692,11 @@ export function getLandingPageHtml(): string {
         </select>
       </div>
 
+      <div class="checkbox-group" style="display: flex; flex-direction: row !important; align-items: center; gap: 10px; margin-top: 10px; cursor: pointer; user-select: none;">
+        <input type="checkbox" id="gemini-ai" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--color-primary-glow); margin: 0;">
+        <label for="gemini-ai" style="margin: 0; cursor: pointer; font-size: 14px; font-weight: 500;">Enable Gemini AI Insights ✨</label>
+      </div>
+
       <div class="actions-panel">
         <div class="panel-section-title">Export Workspace</div>
         <button class="btn btn-primary" id="export-svg-btn">Export as SVG</button>
@@ -726,11 +731,16 @@ export function getLandingPageHtml(): string {
       <button class="modal-close" id="modal-close-btn">&times;</button>
       <div class="modal-title">🌟 Support GitCrib</div>
       <div class="modal-description">
-        Support the project by starring the repository on GitHub. This instantly unlocks all high-resolution download formats!
+        Support the project by starring the repository on GitHub. This helps more developers discover GitCrib!
       </div>
-      <a href="https://github.com/Garvit-821/GitCrib" target="_blank" class="star-btn" id="star-github-link">
-        ★ STAR GITCRIB ON GITHUB
-      </a>
+      <div style="display: flex; flex-direction: column; gap: 16px; align-items: center;">
+        <a href="https://github.com/Garvit-821/GitCrib" target="_blank" class="star-btn" id="star-github-link">
+          ★ STAR GITCRIB ON GITHUB
+        </a>
+        <button class="btn btn-secondary" id="direct-export-btn" style="width: auto; padding: 10px 24px; font-size: 13px; font-family: 'JetBrains Mono', monospace; font-weight: 600;">
+          Continue to Export
+        </button>
+      </div>
     </div>
   </div>
 
@@ -745,13 +755,13 @@ export function getLandingPageHtml(): string {
       amber: '#120d0a'
     };
 
-    let isStarred = localStorage.getItem('gitcrib_starred') === 'true';
     let pendingDownloadFn = null;
 
     const usernameInput = document.getElementById('username');
     const generateBtn = document.getElementById('generate-btn');
     const themeSelect = document.getElementById('theme');
     const presetSelect = document.getElementById('preset');
+    const geminiCheckbox = document.getElementById('gemini-ai');
     const previewImg = document.getElementById('preview-img');
     const loadingOverlay = document.getElementById('loading-overlay');
     
@@ -763,18 +773,20 @@ export function getLandingPageHtml(): string {
     const modalBackdrop = document.getElementById('modal-backdrop');
     const modalCloseBtn = document.getElementById('modal-close-btn');
     const starGithubLink = document.getElementById('star-github-link');
+    const directExportBtn = document.getElementById('direct-export-btn');
     const toast = document.getElementById('toast');
 
     function updatePreview() {
       const username = usernameInput.value.trim() || 'Garvit-821';
       const theme = themeSelect.value;
       const preset = presetSelect.value;
+      const gemini = geminiCheckbox.checked ? '&gemini=true' : '';
       
       const layout = (preset === 'banner' || preset === 'twitter' || preset === 'linkedin') ? 'banner' : 'poster';
       
       loadingOverlay.style.display = 'flex';
       
-      const newSrc = '/?username=' + encodeURIComponent(username) + '&theme=' + theme + '&layout=' + layout + '&t=' + Date.now();
+      const newSrc = '/?username=' + encodeURIComponent(username) + '&theme=' + theme + '&layout=' + layout + gemini + '&t=' + Date.now();
       
       const tempImg = new Image();
       tempImg.src = newSrc;
@@ -794,14 +806,11 @@ export function getLandingPageHtml(): string {
     });
     themeSelect.addEventListener('change', updatePreview);
     presetSelect.addEventListener('change', updatePreview);
+    geminiCheckbox.addEventListener('change', updatePreview);
 
     function checkStarLock(actionFn) {
-      if (isStarred) {
-        actionFn();
-      } else {
-        pendingDownloadFn = actionFn;
-        modalBackdrop.style.display = 'flex';
-      }
+      pendingDownloadFn = actionFn;
+      modalBackdrop.style.display = 'flex';
     }
 
     modalCloseBtn.addEventListener('click', () => {
@@ -815,10 +824,7 @@ export function getLandingPageHtml(): string {
     });
 
     starGithubLink.addEventListener('click', () => {
-      localStorage.setItem('gitcrib_starred', 'true');
-      isStarred = true;
       modalBackdrop.style.display = 'none';
-      
       setTimeout(() => {
         if (pendingDownloadFn) {
           pendingDownloadFn();
@@ -827,14 +833,23 @@ export function getLandingPageHtml(): string {
       }, 500);
     });
 
+    directExportBtn.addEventListener('click', () => {
+      modalBackdrop.style.display = 'none';
+      if (pendingDownloadFn) {
+        pendingDownloadFn();
+        pendingDownloadFn = null;
+      }
+    });
+
     exportSvgBtn.addEventListener('click', () => {
       checkStarLock(() => {
         const username = usernameInput.value.trim() || 'Garvit-821';
         const theme = themeSelect.value;
         const preset = presetSelect.value;
+        const gemini = geminiCheckbox.checked ? '&gemini=true' : '';
         const layout = (preset === 'banner' || preset === 'twitter' || preset === 'linkedin') ? 'banner' : 'poster';
         
-        const url = '/?username=' + encodeURIComponent(username) + '&theme=' + theme + '&layout=' + layout;
+        const url = '/?username=' + encodeURIComponent(username) + '&theme=' + theme + '&layout=' + layout + gemini;
         
         fetch(url)
           .then(res => res.text())
@@ -855,6 +870,7 @@ export function getLandingPageHtml(): string {
       const username = usernameInput.value.trim() || 'Garvit-821';
       const theme = themeSelect.value;
       const preset = presetSelect.value;
+      const gemini = geminiCheckbox.checked ? '&gemini=true' : '';
       const layout = (preset === 'banner' || preset === 'twitter' || preset === 'linkedin') ? 'banner' : 'poster';
       
       let canvasWidth = 1200;
@@ -886,7 +902,7 @@ export function getLandingPageHtml(): string {
       ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
       const img = new Image();
-      const url = '/?username=' + encodeURIComponent(username) + '&theme=' + theme + '&layout=' + layout;
+      const url = '/?username=' + encodeURIComponent(username) + '&theme=' + theme + '&layout=' + layout + gemini;
       
       fetch(url)
         .then(res => res.text())
@@ -945,13 +961,14 @@ export function getLandingPageHtml(): string {
       const username = usernameInput.value.trim() || 'Garvit-821';
       const theme = themeSelect.value;
       const preset = presetSelect.value;
+      const gemini = geminiCheckbox.checked ? '&gemini=true' : '';
       const layout = (preset === 'banner' || preset === 'twitter' || preset === 'linkedin') ? 'banner' : 'poster';
       
       const width = layout === 'banner' ? '1200' : '1200';
       const height = layout === 'banner' ? '400' : '1600';
       const origin = window.location.origin;
       
-      const iframeCode = \`<iframe src="\${origin}/?username=\${encodeURIComponent(username)}&theme=\${theme}&layout=\${layout}" width="100%" style="aspect-ratio: \${width}/\${height}; border: none;" scrolling="no"></iframe>\`;
+      const iframeCode = \`<iframe src="\${origin}/?username=\${encodeURIComponent(username)}&theme=\${theme}&layout=\${layout}\${gemini}" width="100%" style="aspect-ratio: \${width}/\${height}; border: none;" scrolling="no"></iframe>\`;
       
       navigator.clipboard.writeText(iframeCode)
         .then(() => {
