@@ -147,3 +147,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 *   **v1.0.4**: Add descriptive labels for theme visual settings.
 *   **v1.0.5**: Add mobile viewport coordinates configuration detail.
 *   **v1.0.6**: Document canvas rendering options for JPG/PNG exports.
+*   **v1.0.7**: Document vector math-driven charts coordinates mapping.
