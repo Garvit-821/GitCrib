@@ -92,5 +92,45 @@ A one-click deploy button to run your own instance of the GitCrib API on Vercel 
 
 ---
 
+## 🤝 Contributing
+
+Contributions make the open-source community an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+If you want to contribute:
+1. **Fork** the Project.
+2. Create your **Feature Branch** (`git checkout -b feature/AmazingFeature`).
+3. **Commit** your Changes (`git commit -m 'Add some AmazingFeature'`).
+4. **Push** to the Branch (`git push origin feature/AmazingFeature`).
+5. Open a **Pull Request**.
+
+Feel free to open issues to report bugs, suggest features, or request new theme/layout configurations!
+
+---
+
+## 📖 The Error Book
+
+A record of technical challenges faced during development and the engineering solutions implemented:
+
+### 1. GitHub API Rate Limiting (403 Forbidden)
+*   **Symptom/Cause**: Direct calls to GitHub REST endpoints (profile stats, commit search) return `403 Forbidden` under high traffic due to strict IP rate limits.
+*   **Solution**: Implemented regex-based HTML parsers (`scrapeGithubProfile` and `fetchContributionCalendar` in `api/index.ts`) as fallbacks. If the REST API fails, the server fetches the public profile pages and extracts user stats, language splits, and the daily contribution calendar grid without API credentials.
+
+### 2. Broken Avatar Images in SVG Embeds
+*   **Symptom/Cause**: When loading the generated SVG within an HTML `<img>` tag, the browser blocks all external sub-requests (such as loading the avatar image URL from `https://avatars.githubusercontent.com/...`) due to SVG security containment policies.
+*   **Solution**: Implemented a server-side base64 image compiler (`fetchAvatarAsBase64` in `api/index.ts`). The server fetches the avatar image, encodes it into a Base64 data URI (`data:image/...;base64,...`), and embeds it directly into the SVG’s `<image>` tag.
+
+### 3. Text Overlap in Header Blocks
+*   **Symptom/Cause**: Long usernames, extensive custom developer class names, or verbose biography text overlapped horizontally with the metadata columns (`Location`, `Website`, `Profile`).
+*   **Solution**: Refined `ProfileHeader` in `components/DataBlocks.tsx` to:
+    *   Split the username (`@username`) and developer title (`devClass`) into separate stacked lines.
+    *   Implement a helper function to wrap long bios into multi-line strings (max 32 chars per line).
+    *   Shifted the metadata columns further to the right (`Column 1` to `x = 810`, `Column 2` to `x = 980`) to expand clearance.
+
+### 4. Nesting Template Literals & TypeScript Compile Breaks
+*   **Symptom/Cause**: Nested backticks (`` ` ``) and string interpolation markers (`${}`) inside client-side JS scripts broke string matching and triggered compilation errors inside the parent landing page template string literal.
+*   **Solution**: Escaped all nested template literal elements (e.g., as `` \`image/\${format}\` ``) in `components/LandingPage.ts` to keep the TypeScript compiler and edge builder happy.
+
+---
+
 ## 📄 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
