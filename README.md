@@ -157,3 +157,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 *   **v1.0.14**: Clarify contribution guidelines workflow steps.
 *   **v1.0.15**: Document Base64 avatar conversion resolution context.
 *   **v1.0.16**: Document coordinate spacing adjustments for header layout.
+*   **v1.0.17**: Add link reference validation details.
