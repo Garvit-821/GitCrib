@@ -145,3 +145,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 *   **v1.0.2**: Clarify local development environment requirements.
 *   **v1.0.3**: Format API query parameters table structure.
 *   **v1.0.4**: Add descriptive labels for theme visual settings.
+*   **v1.0.5**: Add mobile viewport coordinates configuration detail.
