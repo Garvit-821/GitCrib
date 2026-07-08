@@ -155,3 +155,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 *   **v1.0.12**: Document Vercel configuration override warnings.
 *   **v1.0.13**: Add detail on local testing suite execution.
 *   **v1.0.14**: Clarify contribution guidelines workflow steps.
+*   **v1.0.15**: Document Base64 avatar conversion resolution context.
