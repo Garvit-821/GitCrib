@@ -151,3 +151,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 *   **v1.0.8**: Enhance readability of achievement badges description.
 *   **v1.0.9**: Clarify tech stack matrix scanning process.
 *   **v1.0.10**: Clarify fallback scraping logic workflow.
+*   **v1.0.11**: Add quick-start setup notes for prerequisites.
