@@ -153,3 +153,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 *   **v1.0.10**: Clarify fallback scraping logic workflow.
 *   **v1.0.11**: Add quick-start setup notes for prerequisites.
 *   **v1.0.12**: Document Vercel configuration override warnings.
+*   **v1.0.13**: Add detail on local testing suite execution.
