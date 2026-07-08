@@ -87,6 +87,9 @@ Customize your blueprint embeds using URL query parameters:
 
 ## ⚡ Deployment
 
+### Live Instance
+You can access the live instance of GitCrib at: [https://git-crib.vercel.app/](https://git-crib.vercel.app/)
+
 ### Vercel Deployment (Coming Soon)
 A one-click deploy button to run your own instance of the GitCrib API on Vercel Serverless/Edge functions will be available soon.
 

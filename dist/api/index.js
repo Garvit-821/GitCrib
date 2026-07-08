@@ -544,274 +544,284 @@ async function fetchGithubStats(username) {
     }
 }
 export default async function handler(req) {
-    const url = new URL(req.url);
-    // Serve landing page HTML if no username parameter is present
-    const usernameParam = url.searchParams.get('username');
-    if (!usernameParam) {
-        return new Response(getLandingPageHtml(), {
+    try {
+        const url = new URL(req.url);
+        // Serve landing page HTML if no username parameter is present
+        const usernameParam = url.searchParams.get('username');
+        if (!usernameParam) {
+            return new Response(getLandingPageHtml(), {
+                status: 200,
+                headers: {
+                    'Content-Type': 'text/html; charset=utf-8',
+                },
+            });
+        }
+        const username = usernameParam;
+        const geminiParam = url.searchParams.get('gemini');
+        const useGemini = geminiParam === 'true';
+        // 1. Fetch profile stats
+        const github = await fetchGithubStats(username);
+        // 2. Fetch contribution calendar stats
+        const calendar = await fetchContributionCalendar(username);
+        // Deterministic fallback
+        const det = getDeterministicStats(username);
+        // Resolve values
+        const hasLiveProfile = github.success;
+        const hasLiveCalendar = calendar.success;
+        const name = hasLiveProfile ? github.name : username.toUpperCase();
+        const avatarUrlRaw = hasLiveProfile ? github.avatarUrl : `https://avatars.githubusercontent.com/u/${hashString(username) % 999999}?v=4`;
+        let avatarUrl = avatarUrlRaw;
+        if (avatarUrlRaw.startsWith('http')) {
+            avatarUrl = await fetchAvatarAsBase64(avatarUrlRaw);
+        }
+        const bio = hasLiveProfile ? github.bio : 'Developer // Innovator';
+        const joinedDate = hasLiveProfile ? github.joinedDate : det.joinedDate;
+        const followers = hasLiveProfile ? github.followers : 12;
+        const following = hasLiveProfile ? github.following : 8;
+        const starsParam = url.searchParams.get('stars');
+        const stars = starsParam ? parseInt(starsParam, 10) : (hasLiveProfile ? github.stars : 45);
+        const totalContributions = hasLiveCalendar ? calendar.totalContributions : det.totalContributions;
+        const currentStreak = hasLiveCalendar ? calendar.currentStreak : det.currentStreak;
+        const longestStreak = hasLiveCalendar ? calendar.longestStreak : det.longestStreak;
+        const streakDateRange = hasLiveCalendar ? calendar.streakDateRange : det.streakDateRange;
+        const longestStreakDateRange = hasLiveCalendar ? calendar.longestStreakDateRange : det.longestStreakDateRange;
+        const contributionsHistory = hasLiveCalendar ? calendar.contributionsHistory : det.contributionsHistory;
+        const commitData = hasLiveCalendar ? calendar.commitData : det.commitData;
+        const pushHistory = hasLiveCalendar ? calendar.pushHistory : det.pushHistory;
+        // Search API or local estimation for commits, prs, issues, reviews
+        let commits = Math.round(totalContributions * 0.8) || det.commits;
+        let prs = Math.round(totalContributions * 0.15) || det.prs;
+        let issues = Math.round(totalContributions * 0.05) || det.issues;
+        let contributedTo = hasLiveProfile ? (github.repos ? Math.min(github.repos.length, 5) : 0) : det.contributedTo;
+        const headers = {
+            'User-Agent': 'GitCrib-Analytics-Engine',
+            ...(process.env.GITHUB_TOKEN ? { 'Authorization': `token ${process.env.GITHUB_TOKEN}` } : {})
+        };
+        try {
+            const searchCommitsUrl = `https://api.github.com/search/commits?q=author:${username}`;
+            const searchCommitsRes = await fetch(searchCommitsUrl, {
+                headers: {
+                    ...headers,
+                    'Accept': 'application/vnd.github.cloak-preview'
+                }
+            });
+            if (searchCommitsRes.ok) {
+                const data = await searchCommitsRes.json();
+                if (typeof data.total_count === 'number') {
+                    commits = data.total_count;
+                }
+            }
+            const searchPRsUrl = `https://api.github.com/search/issues?q=author:${username}+type:pr`;
+            const searchPRsRes = await fetch(searchPRsUrl, { headers });
+            if (searchPRsRes.ok) {
+                const data = await searchPRsRes.json();
+                if (typeof data.total_count === 'number') {
+                    prs = data.total_count;
+                }
+            }
+            const searchIssuesUrl = `https://api.github.com/search/issues?q=author:${username}+type:issue`;
+            const searchIssuesRes = await fetch(searchIssuesUrl, { headers });
+            if (searchIssuesRes.ok) {
+                const data = await searchIssuesRes.json();
+                if (typeof data.total_count === 'number') {
+                    issues = data.total_count;
+                }
+            }
+        }
+        catch (err) {
+            // Ignore search api errors, keep fallbacks
+        }
+        const grade = hasLiveProfile ? github.grade : 'B';
+        const languages = hasLiveProfile ? github.languages : [
+            { name: 'JavaScript', percentage: 65, color: '#f7df1e' },
+            { name: 'HTML', percentage: 20, color: '#e34f26' },
+            { name: 'CSS', percentage: 15, color: '#1572b6' }
+        ];
+        const repos = hasLiveProfile ? github.repos.slice(0, 5) : [
+            { name: 'repo-alpha', stars: 10 },
+            { name: 'repo-beta', stars: 5 }
+        ];
+        const totalReposCount = hasLiveProfile ? github.publicRepos : 2;
+        const activityPRs = prs;
+        const activityIssuesOpened = Math.floor(issues * 0.4);
+        const activityIssuesClosed = Math.floor(issues * 0.6);
+        const activityReposContributed = contributedTo;
+        const activityReposOwned = Math.max(0, totalReposCount - contributedTo);
+        const activityTotalWatchers = stars + 5;
+        const reviewsParam = url.searchParams.get('reviews');
+        const reviews = reviewsParam ? parseInt(reviewsParam, 10) : det.reviews;
+        const starsGiven = det.starsGiven;
+        const gists = hasLiveProfile ? github.gists : 1;
+        const orgs = hashString(username) % 3 === 0 ? '1' : '-';
+        const projects = det.projects;
+        const packages = det.packages;
+        const portfolioUrl = hasLiveProfile ? github.portfolioUrl : `github.com/${username}`;
+        const websiteUrl = hasLiveProfile ? github.websiteUrl : `github.com/${username}`;
+        const email = hasLiveProfile ? github.email : `contact@${username.toLowerCase()}.dev`;
+        const location = hasLiveProfile ? github.location : 'Earth';
+        // 3. Call Gemini developer analysis
+        let geminiData = null;
+        if (useGemini && process.env.GEMINI_API_KEY) {
+            geminiData = await callGeminiDeveloperAnalysis(username, name, bio, totalReposCount, followers, totalContributions, languages, repos);
+        }
+        let calculatedDevClass = 'Senior Core Engineer';
+        if (languages && languages.length > 0) {
+            const topLang = languages[0].name.toLowerCase();
+            if (['typescript', 'javascript'].includes(topLang)) {
+                calculatedDevClass = 'Full Stack Engineer';
+            }
+            else if (['python', 'r'].includes(topLang)) {
+                calculatedDevClass = 'AI & Data Specialist';
+            }
+            else if (['rust', 'go', 'c++', 'c'].includes(topLang)) {
+                calculatedDevClass = 'Systems Architect';
+            }
+            else if (['java', 'kotlin'].includes(topLang)) {
+                calculatedDevClass = 'Enterprise Developer';
+            }
+            else if (['html', 'css'].includes(topLang)) {
+                calculatedDevClass = 'Frontend Engineer';
+            }
+        }
+        const devClassParam = url.searchParams.get('devClass');
+        const devClass = devClassParam || (geminiData ? geminiData.devClass : calculatedDevClass);
+        const calculatedAboutText = bio || 'Open source contributor building technical solutions.';
+        const aboutText = geminiData ? geminiData.aboutText : calculatedAboutText;
+        const themeParam = url.searchParams.get('theme') || 'blueprint';
+        const theme = (['blueprint', 'cyberpunk', 'matrix', 'amber'].includes(themeParam))
+            ? themeParam
+            : 'blueprint';
+        const layoutParam = url.searchParams.get('layout') || 'poster';
+        const layout = (['poster', 'banner'].includes(layoutParam))
+            ? layoutParam
+            : 'poster';
+        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+        // Construct payload to calculate achievements/badges
+        const payloadRepos = languages.map(l => ({
+            name: 'repo',
+            desc: '',
+            language: l.name,
+            stars: 0,
+            forks: 0,
+            issues: 0,
+            watchers: 0,
+            size: 1000,
+            createdAt: '',
+            updatedAt: '',
+            topics: [],
+            private: false
+        }));
+        const badges = calculateBadges({
+            profile: {
+                name,
+                username,
+                createdAt: '2021-01-19T00:00:00Z',
+                followers,
+                following,
+                orgCount: orgs === '-' ? 0 : 1,
+                pinnedRepos: [],
+                profileLink: `https://github.com/${username}`,
+                hireable: true
+            },
+            metrics: {
+                totalStars: stars,
+                forks: 0,
+                watchers: 0,
+                publicRepos: totalReposCount,
+                privateRepos: 0,
+                gists,
+                accountAge: 5,
+                grade,
+                currentStreak,
+                longestStreak,
+                totalContributions,
+                yearlyContributions: totalContributions,
+                monthlyContributions: totalContributions / 12,
+                commits,
+                prsMerged: prs,
+                prsOpen: 0,
+                prsClosed: 0,
+                reposContributedTo: contributedTo,
+                packages,
+                releases: 0,
+                projects,
+                discussions: 0,
+                codeReviews: reviews,
+                starsGiven,
+                reposCreated: totalReposCount,
+                avgCommitsFreq: commits / 365,
+                avgContributionsFreq: totalContributions / 365
+            },
+            repos: payloadRepos,
+            commitData,
+            pushHistory
+        });
+        // Render Poster component
+        const svg = render(h(Poster, {
+            username,
+            name,
+            avatarUrl,
+            bio: geminiData ? geminiData.bio : bio,
+            joinedDate,
+            devClass,
+            followers,
+            following,
+            stars,
+            commits,
+            prs,
+            issues,
+            contributedTo,
+            grade,
+            totalContributions,
+            currentStreak,
+            longestStreak,
+            streakDateRange,
+            longestStreakDateRange,
+            contributionsHistory,
+            languages,
+            repos,
+            totalReposCount,
+            activityPRs,
+            activityIssuesOpened,
+            activityIssuesClosed,
+            activityReposContributed,
+            activityReposOwned,
+            activityTotalWatchers,
+            commitData,
+            pushHistory,
+            reviews,
+            starsGiven,
+            gists,
+            orgs,
+            projects,
+            packages,
+            aboutText,
+            portfolioUrl,
+            websiteUrl,
+            email,
+            location,
+            timestamp,
+            theme,
+            layout,
+            badges
+        }));
+        // Return response
+        return new Response(svg, {
             status: 200,
             headers: {
-                'Content-Type': 'text/html; charset=utf-8',
+                'Content-Type': 'image/svg+xml',
+                'Cache-Control': 'max-age=0, no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0',
             },
         });
     }
-    const username = usernameParam;
-    const geminiParam = url.searchParams.get('gemini');
-    const useGemini = geminiParam === 'true';
-    // 1. Fetch profile stats
-    const github = await fetchGithubStats(username);
-    // 2. Fetch contribution calendar stats
-    const calendar = await fetchContributionCalendar(username);
-    // Deterministic fallback
-    const det = getDeterministicStats(username);
-    // Resolve values
-    const hasLiveProfile = github.success;
-    const hasLiveCalendar = calendar.success;
-    const name = hasLiveProfile ? github.name : username.toUpperCase();
-    const avatarUrlRaw = hasLiveProfile ? github.avatarUrl : `https://avatars.githubusercontent.com/u/${hashString(username) % 999999}?v=4`;
-    let avatarUrl = avatarUrlRaw;
-    if (avatarUrlRaw.startsWith('http')) {
-        avatarUrl = await fetchAvatarAsBase64(avatarUrlRaw);
-    }
-    const bio = hasLiveProfile ? github.bio : 'Developer // Innovator';
-    const joinedDate = hasLiveProfile ? github.joinedDate : det.joinedDate;
-    const followers = hasLiveProfile ? github.followers : 12;
-    const following = hasLiveProfile ? github.following : 8;
-    const starsParam = url.searchParams.get('stars');
-    const stars = starsParam ? parseInt(starsParam, 10) : (hasLiveProfile ? github.stars : 45);
-    const totalContributions = hasLiveCalendar ? calendar.totalContributions : det.totalContributions;
-    const currentStreak = hasLiveCalendar ? calendar.currentStreak : det.currentStreak;
-    const longestStreak = hasLiveCalendar ? calendar.longestStreak : det.longestStreak;
-    const streakDateRange = hasLiveCalendar ? calendar.streakDateRange : det.streakDateRange;
-    const longestStreakDateRange = hasLiveCalendar ? calendar.longestStreakDateRange : det.longestStreakDateRange;
-    const contributionsHistory = hasLiveCalendar ? calendar.contributionsHistory : det.contributionsHistory;
-    const commitData = hasLiveCalendar ? calendar.commitData : det.commitData;
-    const pushHistory = hasLiveCalendar ? calendar.pushHistory : det.pushHistory;
-    // Search API or local estimation for commits, prs, issues, reviews
-    let commits = Math.round(totalContributions * 0.8) || det.commits;
-    let prs = Math.round(totalContributions * 0.15) || det.prs;
-    let issues = Math.round(totalContributions * 0.05) || det.issues;
-    let contributedTo = hasLiveProfile ? (github.repos ? Math.min(github.repos.length, 5) : 0) : det.contributedTo;
-    const headers = {
-        'User-Agent': 'GitCrib-Analytics-Engine',
-        ...(process.env.GITHUB_TOKEN ? { 'Authorization': `token ${process.env.GITHUB_TOKEN}` } : {})
-    };
-    try {
-        const searchCommitsUrl = `https://api.github.com/search/commits?q=author:${username}`;
-        const searchCommitsRes = await fetch(searchCommitsUrl, {
-            headers: {
-                ...headers,
-                'Accept': 'application/vnd.github.cloak-preview'
-            }
-        });
-        if (searchCommitsRes.ok) {
-            const data = await searchCommitsRes.json();
-            if (typeof data.total_count === 'number') {
-                commits = data.total_count;
-            }
-        }
-        const searchPRsUrl = `https://api.github.com/search/issues?q=author:${username}+type:pr`;
-        const searchPRsRes = await fetch(searchPRsUrl, { headers });
-        if (searchPRsRes.ok) {
-            const data = await searchPRsRes.json();
-            if (typeof data.total_count === 'number') {
-                prs = data.total_count;
-            }
-        }
-        const searchIssuesUrl = `https://api.github.com/search/issues?q=author:${username}+type:issue`;
-        const searchIssuesRes = await fetch(searchIssuesUrl, { headers });
-        if (searchIssuesRes.ok) {
-            const data = await searchIssuesRes.json();
-            if (typeof data.total_count === 'number') {
-                issues = data.total_count;
-            }
-        }
-    }
     catch (err) {
-        // Ignore search api errors, keep fallbacks
+        return new Response(`Error in Edge handler:\n${err.message}\n\nStack:\n${err.stack}`, {
+            status: 500,
+            headers: {
+                'Content-Type': 'text/plain; charset=utf-8',
+            },
+        });
     }
-    const grade = hasLiveProfile ? github.grade : 'B';
-    const languages = hasLiveProfile ? github.languages : [
-        { name: 'JavaScript', percentage: 65, color: '#f7df1e' },
-        { name: 'HTML', percentage: 20, color: '#e34f26' },
-        { name: 'CSS', percentage: 15, color: '#1572b6' }
-    ];
-    const repos = hasLiveProfile ? github.repos.slice(0, 5) : [
-        { name: 'repo-alpha', stars: 10 },
-        { name: 'repo-beta', stars: 5 }
-    ];
-    const totalReposCount = hasLiveProfile ? github.publicRepos : 2;
-    const activityPRs = prs;
-    const activityIssuesOpened = Math.floor(issues * 0.4);
-    const activityIssuesClosed = Math.floor(issues * 0.6);
-    const activityReposContributed = contributedTo;
-    const activityReposOwned = Math.max(0, totalReposCount - contributedTo);
-    const activityTotalWatchers = stars + 5;
-    const reviewsParam = url.searchParams.get('reviews');
-    const reviews = reviewsParam ? parseInt(reviewsParam, 10) : det.reviews;
-    const starsGiven = det.starsGiven;
-    const gists = hasLiveProfile ? github.gists : 1;
-    const orgs = hashString(username) % 3 === 0 ? '1' : '-';
-    const projects = det.projects;
-    const packages = det.packages;
-    const portfolioUrl = hasLiveProfile ? github.portfolioUrl : `github.com/${username}`;
-    const websiteUrl = hasLiveProfile ? github.websiteUrl : `github.com/${username}`;
-    const email = hasLiveProfile ? github.email : `contact@${username.toLowerCase()}.dev`;
-    const location = hasLiveProfile ? github.location : 'Earth';
-    // 3. Call Gemini developer analysis
-    let geminiData = null;
-    if (useGemini && process.env.GEMINI_API_KEY) {
-        geminiData = await callGeminiDeveloperAnalysis(username, name, bio, totalReposCount, followers, totalContributions, languages, repos);
-    }
-    let calculatedDevClass = 'Senior Core Engineer';
-    if (languages && languages.length > 0) {
-        const topLang = languages[0].name.toLowerCase();
-        if (['typescript', 'javascript'].includes(topLang)) {
-            calculatedDevClass = 'Full Stack Engineer';
-        }
-        else if (['python', 'r'].includes(topLang)) {
-            calculatedDevClass = 'AI & Data Specialist';
-        }
-        else if (['rust', 'go', 'c++', 'c'].includes(topLang)) {
-            calculatedDevClass = 'Systems Architect';
-        }
-        else if (['java', 'kotlin'].includes(topLang)) {
-            calculatedDevClass = 'Enterprise Developer';
-        }
-        else if (['html', 'css'].includes(topLang)) {
-            calculatedDevClass = 'Frontend Engineer';
-        }
-    }
-    const devClassParam = url.searchParams.get('devClass');
-    const devClass = devClassParam || (geminiData ? geminiData.devClass : calculatedDevClass);
-    const calculatedAboutText = bio || 'Open source contributor building technical solutions.';
-    const aboutText = geminiData ? geminiData.aboutText : calculatedAboutText;
-    const themeParam = url.searchParams.get('theme') || 'blueprint';
-    const theme = (['blueprint', 'cyberpunk', 'matrix', 'amber'].includes(themeParam))
-        ? themeParam
-        : 'blueprint';
-    const layoutParam = url.searchParams.get('layout') || 'poster';
-    const layout = (['poster', 'banner'].includes(layoutParam))
-        ? layoutParam
-        : 'poster';
-    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
-    // Construct payload to calculate achievements/badges
-    const payloadRepos = languages.map(l => ({
-        name: 'repo',
-        desc: '',
-        language: l.name,
-        stars: 0,
-        forks: 0,
-        issues: 0,
-        watchers: 0,
-        size: 1000,
-        createdAt: '',
-        updatedAt: '',
-        topics: [],
-        private: false
-    }));
-    const badges = calculateBadges({
-        profile: {
-            name,
-            username,
-            createdAt: '2021-01-19T00:00:00Z',
-            followers,
-            following,
-            orgCount: orgs === '-' ? 0 : 1,
-            pinnedRepos: [],
-            profileLink: `https://github.com/${username}`,
-            hireable: true
-        },
-        metrics: {
-            totalStars: stars,
-            forks: 0,
-            watchers: 0,
-            publicRepos: totalReposCount,
-            privateRepos: 0,
-            gists,
-            accountAge: 5,
-            grade,
-            currentStreak,
-            longestStreak,
-            totalContributions,
-            yearlyContributions: totalContributions,
-            monthlyContributions: totalContributions / 12,
-            commits,
-            prsMerged: prs,
-            prsOpen: 0,
-            prsClosed: 0,
-            reposContributedTo: contributedTo,
-            packages,
-            releases: 0,
-            projects,
-            discussions: 0,
-            codeReviews: reviews,
-            starsGiven,
-            reposCreated: totalReposCount,
-            avgCommitsFreq: commits / 365,
-            avgContributionsFreq: totalContributions / 365
-        },
-        repos: payloadRepos,
-        commitData,
-        pushHistory
-    });
-    // Render Poster component
-    const svg = render(h(Poster, {
-        username,
-        name,
-        avatarUrl,
-        bio: geminiData ? geminiData.bio : bio,
-        joinedDate,
-        devClass,
-        followers,
-        following,
-        stars,
-        commits,
-        prs,
-        issues,
-        contributedTo,
-        grade,
-        totalContributions,
-        currentStreak,
-        longestStreak,
-        streakDateRange,
-        longestStreakDateRange,
-        contributionsHistory,
-        languages,
-        repos,
-        totalReposCount,
-        activityPRs,
-        activityIssuesOpened,
-        activityIssuesClosed,
-        activityReposContributed,
-        activityReposOwned,
-        activityTotalWatchers,
-        commitData,
-        pushHistory,
-        reviews,
-        starsGiven,
-        gists,
-        orgs,
-        projects,
-        packages,
-        aboutText,
-        portfolioUrl,
-        websiteUrl,
-        email,
-        location,
-        timestamp,
-        theme,
-        layout,
-        badges
-    }));
-    // Return response
-    return new Response(svg, {
-        status: 200,
-        headers: {
-            'Content-Type': 'image/svg+xml',
-            'Cache-Control': 'max-age=0, no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-        },
-    });
 }
