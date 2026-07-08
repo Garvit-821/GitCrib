@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Compare Mockup vs Current Render</title>
+  <style>
+    body {
+      background: #0b0b14;
+      color: white;
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    .comparison {
+      display: flex;
+      gap: 20px;
+    }
+    .panel {
+      flex: 1;
+      border: 1px solid #333;
+      padding: 10px;
+      background: #111;
+      border-radius: 8px;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #444;
+    }
+  </style>
+</head>
+<body>
+  <h1>GitCrib Design Comparison</h1>
+  <div class="comparison">
+    <div class="panel">
+      <h2>Original Mockup (demo-gitcrib.png)</h2>
+      <img src="demo-gitcrib.png" alt="Mockup">
+    </div>
+    <div class="panel">
+      <h2>Current SVG Render</h2>
+      <img src="http://localhost:3000/?username=Garvit-821&theme=blueprint&layout=poster" alt="Current Render">
+    </div>
+  </div>
+</body>
+</html>

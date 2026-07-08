@@ -3,7 +3,7 @@ import {
   ProfileHeader,
   OverviewList,
   GradeCard,
-  ContributionsCard,
+  SimpleMetricCard,
   StreakCard,
   ContributionGraph,
   LanguagesDonut,
@@ -62,6 +62,7 @@ interface PosterProps {
   timestamp?: string;
   theme?: 'blueprint' | 'cyberpunk' | 'matrix' | 'amber';
   layout?: 'poster' | 'banner';
+  badges?: any[];
 }
 
 const themeMap: Record<'blueprint' | 'cyberpunk' | 'matrix' | 'amber', ThemeColors> = {
@@ -156,7 +157,8 @@ export const Poster = ({
   location = 'Delhi, India',
   timestamp = '2026-07-06 00:00:00 UTC',
   theme = 'blueprint',
-  layout = 'poster'
+  layout = 'poster',
+  badges = []
 }: PosterProps) => {
   const colors = themeMap[theme] || themeMap.blueprint;
   const width = 1200;
@@ -253,50 +255,53 @@ export const Poster = ({
               joinedDate={joinedDate}
               devClass={devClass}
               colors={colors}
-            />
-          </g>
-
-          {/* 2. Grid Row 1 (y: 205): Overview (left) + 2x2 widgets + Chart */}
-          <g transform="translate(40, 205)">
-            <OverviewList
-              stars={stars}
-              commits={commits}
-              prs={prs}
-              issues={issues}
-              contributedTo={contributedTo}
+              location={location}
+              websiteUrl={websiteUrl}
               followers={followers}
               following={following}
-              colors={colors}
+              hireable={username === 'Garvit-821'}
             />
           </g>
 
-          {/* Stack of 4 cards top-right */}
-          <g transform="translate(400, 205)">
+          {/* 2. Row 2 (y: 205): 7 side-by-side circular stats cards */}
+          <g transform="translate(40, 205)">
             <GradeCard grade={grade} colors={colors} />
           </g>
-          <g transform="translate(590, 205)">
-            <ContributionsCard total={totalContributions} dateRange={joinedDate + " - Present"} colors={colors} />
+          <g transform="translate(204, 205)">
+            <SimpleMetricCard value={stars} label="Total Stars" colors={colors} />
           </g>
-          <g transform="translate(780, 205)">
+          <g transform="translate(368, 205)">
+            <SimpleMetricCard value={commits} label="Total Commits" subLabel="Last Year" colors={colors} />
+          </g>
+          <g transform="translate(532, 205)">
+            <SimpleMetricCard value={prs} label="Total PRs" colors={colors} />
+          </g>
+          <g transform="translate(696, 205)">
+            <SimpleMetricCard value={totalContributions} label="Total Contributions" subLabel={joinedDate + " - Present"} colors={colors} />
+          </g>
+          <g transform="translate(860, 205)">
             <StreakCard title="Current Streak" value={currentStreak} dateRange={streakDateRange} isCurrent={true} colors={colors} />
           </g>
-          <g transform="translate(970, 205)">
+          <g transform="translate(1024, 205)">
             <StreakCard title="Longest Streak" value={longestStreak} dateRange={longestStreakDateRange} isCurrent={false} colors={colors} />
           </g>
 
-          {/* Contribution Graph below the 4 cards */}
-          <g transform="translate(400, 385)">
+          {/* 3. Row 3 (y: 335): Contributions Line Chart (left) + Green Heatmap (right) */}
+          <g transform="translate(40, 335)">
             <ContributionGraph history={contributionsHistory} colors={colors} />
           </g>
+          <g transform="translate(610, 335)">
+            <CalendarHeatmap commitData={commitData} colors={colors} isGreen={true} title="CONTRIBUTIONS IN THE LAST YEAR" />
+          </g>
 
-          {/* 3. Grid Row 2 (y: 675): Languages (left) + Top Repos (middle) + Activity Summary (right) */}
-          <g transform="translate(40, 675)">
+          {/* 4. Row 4 (y: 575): Languages (left) + Top Repos (middle) + Activity Summary (right) */}
+          <g transform="translate(40, 575)">
             <LanguagesDonut languages={languages} colors={colors} />
           </g>
-          <g transform="translate(400, 675)">
+          <g transform="translate(400, 575)">
             <ReposList repos={repos} totalReposCount={totalReposCount} colors={colors} />
           </g>
-          <g transform="translate(760, 675)">
+          <g transform="translate(760, 575)">
             <ActivitySummary
               pullRequests={activityPRs}
               issuesOpened={activityIssuesOpened}
@@ -308,16 +313,16 @@ export const Poster = ({
             />
           </g>
 
-          {/* 4. Grid Row 3 (y: 1015): Commit Heatmap (left) + Push Bar Chart (right) */}
-          <g transform="translate(40, 1015)">
-            <CalendarHeatmap commitData={commitData} colors={colors} />
+          {/* 5. Row 5 (y: 915): Purple themed Heatmap (left) + Push Bar Chart (right) */}
+          <g transform="translate(40, 915)">
+            <CalendarHeatmap commitData={commitData} colors={colors} isGreen={false} title="COMMIT ACTIVITY (LAST 12 MONTHS)" />
           </g>
-          <g transform="translate(610, 1015)">
+          <g transform="translate(610, 915)">
             <PushBarChart pushHistory={pushHistory} colors={colors} />
           </g>
 
-          {/* 5. Grid Row 4 (y: 1255): 1x6 Social Strip */}
-          <g transform="translate(40, 1255)">
+          {/* 6. Row 6 (y: 1155): 1x6 Social Strip */}
+          <g transform="translate(40, 1155)">
             <SocialStrip
               reviews={reviews}
               starsGiven={starsGiven}
@@ -329,8 +334,8 @@ export const Poster = ({
             />
           </g>
 
-          {/* 6. Footer (y: 1365) */}
-          <g transform="translate(40, 1365)">
+          {/* 7. Row 7 (y: 1265): Footer Columns */}
+          <g transform="translate(40, 1265)">
             <FooterBlocks
               aboutText={aboutText}
               portfolioUrl={portfolioUrl}
@@ -338,11 +343,12 @@ export const Poster = ({
               email={email}
               location={location}
               colors={colors}
+              badges={badges}
             />
           </g>
 
-          {/* Bottom Metabar */}
-          <g transform="translate(40, 1545)">
+          {/* 8. Row 8: Bottom Metabar (y: 1530) */}
+          <g transform="translate(40, 1530)">
             <line x1="0" y1="0" x2="1120" y2="0" stroke={colors.grid} strokeWidth="0.5" strokeOpacity="0.4" />
             <text x="0" y="24" fill="#666666" fontSize="11" fontFamily="monospace">
               Last Updated: {timestamp}

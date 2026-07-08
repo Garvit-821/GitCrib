@@ -33,7 +33,10 @@ const Icons = {
   project: <path d="M4 2h16c1.1 0 2 .9 2 2v16c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2zm0 4v4h16V6H4zm0 6v8h16v-8H4z" fill="currentColor" />,
   package: <path d="M12 2L2 7l10 5 10-5-10-5zm0 18l-10-5V9.5l10 5 10-5V15l-10 5z" fill="currentColor" />,
   globe: <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95a15.65 15.65 0 00-1.38-3.56A8.03 8.03 0 0118.92 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.33-.14 2 0 .67.06 1.34.14 2H4.26zm.82 2h2.95c.18 1.3.65 2.51 1.38 3.56A8.03 8.03 0 015.08 16zm2.95-8H5.08a8.03 8.03 0 015.07-3.56C9.42 5.75 8.95 6.96 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.34-.16-2 0-.66.07-1.34.16-2h4.68c.09.66.16 1.34.16 2 0 .66-.07 1.34-.16 2zm.22 5.56c.73-1.05 1.2-2.26 1.38-3.56h2.95a8.03 8.03 0 01-4.33 3.56zM16.62 14c.08-.66.14-1.33.14-2 0-.67-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z" fill="currentColor" />,
-  mail: <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor" />
+  mail: <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor" />,
+  calendar: <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z" fill="currentColor" />,
+  briefcase: <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" fill="currentColor" />,
+  clock: <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" fill="currentColor" />
 };
 
 // Tech Logo SVG paths
@@ -121,6 +124,11 @@ interface ProfileHeaderProps {
   colors: ThemeColors;
   width?: number;
   height?: number;
+  location?: string;
+  websiteUrl?: string;
+  followers?: number | string;
+  following?: number | string;
+  hireable?: boolean;
 }
 
 export const ProfileHeader = ({
@@ -132,10 +140,20 @@ export const ProfileHeader = ({
   devClass,
   colors,
   width = 1120,
-  height = 130
+  height = 130,
+  location = 'Delhi, India',
+  websiteUrl = 'dev.gpdev.in',
+  followers = 18,
+  following = 12,
+  hireable = true
 }: ProfileHeaderProps) => {
   const avatarCX = 460;
   const avatarCY = 65;
+
+  let displayWeb = websiteUrl;
+  if (displayWeb.startsWith('http://')) displayWeb = displayWeb.substring(7);
+  if (displayWeb.startsWith('https://')) displayWeb = displayWeb.substring(8);
+  if (displayWeb.endsWith('/')) displayWeb = displayWeb.substring(0, displayWeb.length - 1);
 
   return (
     <g id="header-block">
@@ -177,35 +195,68 @@ export const ProfileHeader = ({
       <text x="530" y="78" fill={colors.accent1} fontSize="14" fontFamily="monospace" fontWeight="500">
         @{username.toUpperCase()}{devClass ? ' // ' + devClass.toUpperCase() : ''}
       </text>
-      <text x="530" y="105" fill="#a8a8a8" fontSize="13" fontFamily="sans-serif" width="280">
+      <text x="530" y="105" fill="#a8a8a8" fontSize="13" fontFamily="sans-serif" width="220">
         {bio || 'Building the future, one commit at a time.'}
       </text>
 
-      {/* Badges Right */}
-      <g transform="translate(860, 20)">
-        {/* Badge 1 */}
-        <rect width="220" height="42" rx="6" fill={colors.cardBg} stroke={colors.grid} strokeWidth="1" />
-        <g transform="translate(15, 12)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="badge-icon" style={{ color: colors.stroke }}>
-            <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
-            <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2" />
-            <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2" />
-            <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2" />
+      {/* Metadata Columns */}
+      {/* Column 1 (x: 770) */}
+      <g transform="translate(770, 25)">
+        {/* Row 1: Joined */}
+        <g transform="translate(0, 0)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ color: colors.stroke }}>
+            {Icons.calendar}
           </svg>
-          <text x="30" y="13" fill="#a8a8a8" fontSize="11" fontFamily="sans-serif">Since</text>
-          <text x="75" y="13" fill="#ffffff" fontSize="11" fontFamily="monospace" fontWeight="bold">{joinedDate || 'Jan 19, 2021'}</text>
+          <text x="22" y="11" fill="#a8a8a8" fontSize="10" fontFamily="sans-serif">Joined GitHub</text>
+          <text x="22" y="25" fill="#ffffff" fontSize="10" fontFamily="monospace" fontWeight="bold">{joinedDate || 'Jan 19, 2021'}</text>
+        </g>
+        
+        {/* Row 2: Location */}
+        <g transform="translate(0, 36)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ color: colors.stroke }}>
+            {Icons.location}
+          </svg>
+          <text x="22" y="11" fill="#a8a8a8" fontSize="10" fontFamily="sans-serif">Location</text>
+          <text x="22" y="25" fill="#ffffff" fontSize="10" fontFamily="sans-serif" fontWeight="bold">{location || 'Delhi, India'}</text>
         </g>
 
-        {/* Badge 2 */}
-        <g transform="translate(0, 52)">
-          <rect width="220" height="42" rx="6" fill={colors.cardBg} stroke={colors.grid} strokeWidth="1" />
-          <g transform="translate(15, 12)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="badge-icon" style={{ color: colors.stroke }}>
-              <path d={Icons.globe.props.d} fill="currentColor" />
-            </svg>
-            <text x="30" y="13" fill="#a8a8a8" fontSize="11" fontFamily="sans-serif">Profile</text>
-            <text x="75" y="13" fill="#ffffff" fontSize="11" fontFamily="monospace" fontWeight="bold">github.com/{username}</text>
-          </g>
+        {/* Row 3: Website */}
+        <g transform="translate(0, 72)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ color: colors.stroke }}>
+            {Icons.globe}
+          </svg>
+          <text x="22" y="11" fill="#a8a8a8" fontSize="10" fontFamily="sans-serif">Website</text>
+          <text x="22" y="25" fill="#ffffff" fontSize="10" fontFamily="monospace" fontWeight="bold">{displayWeb || 'dev.gpdev.in'}</text>
+        </g>
+      </g>
+
+      {/* Column 2 (x: 960) */}
+      <g transform="translate(960, 25)">
+        {/* Row 1: Followers & Following */}
+        <g transform="translate(0, 0)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ color: colors.stroke }}>
+            {Icons.people}
+          </svg>
+          <text x="22" y="11" fill="#a8a8a8" fontSize="10" fontFamily="sans-serif">Followers / Following</text>
+          <text x="22" y="25" fill="#ffffff" fontSize="10" fontFamily="monospace" fontWeight="bold">{followers} / {following}</text>
+        </g>
+        
+        {/* Row 2: Hireable */}
+        <g transform="translate(0, 36)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ color: colors.stroke }}>
+            {Icons.briefcase}
+          </svg>
+          <text x="22" y="11" fill="#a8a8a8" fontSize="10" fontFamily="sans-serif">Hireable</text>
+          <text x="22" y="25" fill={colors.accent2} fontSize="10" fontFamily="sans-serif" fontWeight="bold">{hireable ? 'Yes' : 'No'}</text>
+        </g>
+
+        {/* Row 3: Profile Link */}
+        <g transform="translate(0, 72)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ color: colors.stroke }}>
+            {Icons.clock}
+          </svg>
+          <text x="22" y="11" fill="#a8a8a8" fontSize="10" fontFamily="sans-serif">Profile</text>
+          <text x="22" y="25" fill="#ffffff" fontSize="10" fontFamily="monospace" fontWeight="bold">github.com/{username}</text>
         </g>
       </g>
     </g>
@@ -288,9 +339,9 @@ interface GradeCardProps {
 }
 
 export const GradeCard = ({ grade = 'B-', colors }: GradeCardProps) => {
-  const cx = 85;
-  const cy = 80;
-  const radius = 34;
+  const cx = 74;
+  const cy = 48;
+  const radius = 24;
   const circ = 2 * Math.PI * radius;
   
   // Custom offset based on grade tier
@@ -302,10 +353,10 @@ export const GradeCard = ({ grade = 'B-', colors }: GradeCardProps) => {
 
   return (
     <g>
-      <rect width="170" height="160" rx="12" fill={colors.cardBg} stroke={colors.grid} strokeWidth="1" />
+      <rect width="148" height="110" rx="10" fill={colors.cardBg} stroke={colors.grid} strokeWidth="1" />
       
       {/* Outer track */}
-      <circle cx={cx} cy={cy} r={radius} fill="none" stroke={colors.grid} strokeWidth="8" strokeOpacity="0.2" />
+      <circle cx={cx} cy={cy} r={radius} fill="none" stroke={colors.grid} strokeWidth="6" strokeOpacity="0.2" />
       
       {/* Filled track */}
       <circle
@@ -314,7 +365,7 @@ export const GradeCard = ({ grade = 'B-', colors }: GradeCardProps) => {
         r={radius}
         fill="none"
         stroke={colors.stroke}
-        strokeWidth="8"
+        strokeWidth="6"
         strokeDasharray={circ.toFixed(1)}
         strokeDashoffset={getOffset(grade).toFixed(1)}
         strokeLinecap="round"
@@ -322,40 +373,40 @@ export const GradeCard = ({ grade = 'B-', colors }: GradeCardProps) => {
       />
 
       {/* Grade center value */}
-      <text x={cx} y={cy + 8} fill="#ffffff" fontSize="24" fontFamily="monospace" fontWeight="900" textAnchor="middle">
+      <text x={cx} y={cy + 6} fill="#ffffff" fontSize="18" fontFamily="monospace" fontWeight="900" textAnchor="middle">
         {grade}
       </text>
 
-      <text x="85" y="138" fill={colors.stroke} fontSize="11" fontFamily="sans-serif" fontWeight="700" textAnchor="middle">
+      <text x="74" y="90" fill={colors.stroke} fontSize="9" fontFamily="sans-serif" fontWeight="700" textAnchor="middle">
         GitHub Grade
       </text>
     </g>
   );
 };
 
-// 4. Contributions Card
-interface ContributionsCardProps {
-  total: number;
-  dateRange: string;
+// 4. Simple Metric Card (Stars, Commits, PRs, Contributions)
+interface SimpleMetricCardProps {
+  value: string | number;
+  label: string;
+  subLabel?: string;
   colors: ThemeColors;
 }
 
-export const ContributionsCard = ({ total, dateRange, colors }: ContributionsCardProps) => {
+export const SimpleMetricCard = ({ value, label, subLabel, colors }: SimpleMetricCardProps) => {
   return (
     <g>
-      <rect width="170" height="160" rx="12" fill={colors.cardBg} stroke={colors.grid} strokeWidth="1" />
-      
-      <text x="85" y="65" fill="#ffffff" fontSize="38" fontFamily="monospace" fontWeight="900" textAnchor="middle">
-        {formatNum(total)}
+      <rect width="148" height="110" rx="10" fill={colors.cardBg} stroke={colors.grid} strokeWidth="1" />
+      <text x="74" y="52" fill="#ffffff" fontSize="28" fontFamily="monospace" fontWeight="900" textAnchor="middle">
+        {value}
       </text>
-
-      <text x="85" y="105" fill={colors.stroke} fontSize="11" fontFamily="sans-serif" fontWeight="700" textAnchor="middle">
-        Total Contributions
+      <text x="74" y="80" fill={colors.stroke} fontSize="9" fontFamily="sans-serif" fontWeight="700" textAnchor="middle">
+        {label}
       </text>
-
-      <text x="85" y="132" fill="#888888" fontSize="9" fontFamily="monospace" textAnchor="middle">
-        {dateRange || 'Jan 19, 2021 - Present'}
-      </text>
+      {subLabel && (
+        <text x="74" y="96" fill="#888888" fontSize="8" fontFamily="monospace" textAnchor="middle">
+          {subLabel}
+        </text>
+      )}
     </g>
   );
 };
@@ -372,22 +423,22 @@ interface StreakCardProps {
 export const StreakCard = ({ title, value, dateRange, isCurrent, colors }: StreakCardProps) => {
   return (
     <g>
-      <rect width="170" height="160" rx="12" fill={colors.cardBg} stroke={colors.grid} strokeWidth="1" />
+      <rect width="148" height="110" rx="10" fill={colors.cardBg} stroke={colors.grid} strokeWidth="1" />
       
       {/* Icon top right */}
-      <svg x="135" y="12" width="20" height="20" viewBox="0 0 24 24" style={{ color: colors.accent1 }}>
+      <svg x="120" y="10" width="16" height="16" viewBox="0 0 24 24" style={{ color: colors.accent1 }}>
         {isCurrent ? Icons.flame : Icons.medal}
       </svg>
 
-      <text x="85" y="65" fill="#ffffff" fontSize="38" fontFamily="monospace" fontWeight="900" textAnchor="middle">
+      <text x="74" y="52" fill="#ffffff" fontSize="28" fontFamily="monospace" fontWeight="900" textAnchor="middle">
         {value}
       </text>
 
-      <text x="85" y="105" fill={colors.stroke} fontSize="11" fontFamily="sans-serif" fontWeight="700" textAnchor="middle">
+      <text x="74" y="80" fill={colors.stroke} fontSize="9" fontFamily="sans-serif" fontWeight="700" textAnchor="middle">
         {title}
       </text>
 
-      <text x="85" y="132" fill="#888888" fontSize="9" fontFamily="monospace" textAnchor="middle">
+      <text x="74" y="96" fill="#888888" fontSize="8" fontFamily="monospace" textAnchor="middle">
         {dateRange}
       </text>
     </g>
@@ -447,7 +498,7 @@ export const ContributionGraph = ({ history = [2, 5, 3, 8, 2, 4, 12, 18, 5, 9], 
       <line x1={paddingX} y1={baseY - graphHeight} x2={width - paddingX} y2={baseY - graphHeight} stroke={colors.grid} strokeWidth="0.5" strokeDasharray="3,6" strokeOpacity="0.2" />
 
       {/* Area Gradient Fill */}
-      <polygon points="" fill="url(#chart-area-gradient)" d={fillPathStr} />
+      <path fill="url(#chart-area-gradient)" d={fillPathStr} />
 
       {/* Line path */}
       <path d={pathStr} fill="none" stroke={colors.stroke} strokeWidth="3" />
@@ -655,9 +706,11 @@ export const ActivitySummary = ({
 interface CalendarHeatmapProps {
   commitData: number[]; // ~371 elements
   colors: ThemeColors;
+  isGreen?: boolean;
+  title?: string;
 }
 
-export const CalendarHeatmap = ({ commitData = [], colors }: CalendarHeatmapProps) => {
+export const CalendarHeatmap = ({ commitData = [], colors, isGreen = false, title = 'COMMIT ACTIVITY (LAST 12 MONTHS)' }: CalendarHeatmapProps) => {
   const width = 550;
   const height = 220;
   
@@ -672,11 +725,19 @@ export const CalendarHeatmap = ({ commitData = [], colors }: CalendarHeatmapProp
 
   // Resolve color bucket
   const getFill = (val: number) => {
-    if (val === 0) return '#161426'; // Empty cell color
-    if (val < 3) return '#3b2075';
-    if (val < 6) return '#6230c0';
-    if (val < 10) return '#7b3aed';
-    return '#a855f7';
+    if (isGreen) {
+      if (val === 0) return '#161b22'; // Standard GitHub dark empty cell
+      if (val < 3) return '#0e4429';
+      if (val < 6) return '#006d32';
+      if (val < 10) return '#26a641';
+      return '#39d353';
+    } else {
+      if (val === 0) return '#161426'; // Empty cell color
+      if (val < 3) return '#3b2075';
+      if (val < 6) return '#6230c0';
+      if (val < 10) return '#7b3aed';
+      return '#a855f7';
+    }
   };
 
   const gridElements: h.JSX.Element[] = [];
@@ -710,7 +771,7 @@ export const CalendarHeatmap = ({ commitData = [], colors }: CalendarHeatmapProp
       <rect width={width} height={height} rx="12" fill={colors.cardBg} stroke={colors.grid} strokeWidth="1" />
       
       <text x="25" y="35" fill={colors.stroke} fontSize="13" fontFamily="sans-serif" fontWeight="800">
-        COMMIT ACTIVITY (LAST 12 MONTHS)
+        {title}
       </text>
 
       {/* Week labels */}
@@ -734,11 +795,11 @@ export const CalendarHeatmap = ({ commitData = [], colors }: CalendarHeatmapProp
       {/* Legend */}
       <g transform="translate(380, 172)">
         <text x="-10" y="8" fill="#666666" fontSize="9" fontFamily="monospace" textAnchor="end">Less</text>
-        <rect x="0" y="0" width="8" height="8" rx="1" fill="#161426" />
-        <rect x="10" y="0" width="8" height="8" rx="1" fill="#3b2075" />
-        <rect x="20" y="0" width="8" height="8" rx="1" fill="#6230c0" />
-        <rect x="30" y="0" width="8" height="8" rx="1" fill="#7b3aed" />
-        <rect x="40" y="0" width="8" height="8" rx="1" fill="#a855f7" />
+        <rect x="0" y="0" width="8" height="8" rx="1" fill={isGreen ? '#161b22' : '#161426'} />
+        <rect x="10" y="0" width="8" height="8" rx="1" fill={isGreen ? '#0e4429' : '#3b2075'} />
+        <rect x="20" y="0" width="8" height="8" rx="1" fill={isGreen ? '#006d32' : '#6230c0'} />
+        <rect x="30" y="0" width="8" height="8" rx="1" fill={isGreen ? '#26a641' : '#7b3aed'} />
+        <rect x="40" y="0" width="8" height="8" rx="1" fill={isGreen ? '#39d353' : '#a855f7'} />
         <text x="55" y="8" fill="#666666" fontSize="9" fontFamily="monospace">More</text>
       </g>
     </g>
@@ -890,7 +951,58 @@ export const SocialStrip = ({
   );
 };
 
-// 13. Footer Blocks
+interface AchievementsListProps {
+  badges?: any[];
+  colors: ThemeColors;
+}
+
+export const AchievementsList = ({ badges = [], colors }: AchievementsListProps) => {
+  const tierOrder: Record<string, number> = { gold: 0, silver: 1, bronze: 2, none: 3 };
+  const activeBadges = (badges || [])
+    .filter(b => b.unlocked)
+    .sort((a, b) => (tierOrder[a.level] || 3) - (tierOrder[b.level] || 3))
+    .slice(0, 4);
+
+  const defaultBadges = [
+    { name: 'Consistency King', description: 'Longest streak of 10 days', level: 'silver' },
+    { name: 'Community Favorite', description: 'Earned 68 stars across repos', level: 'bronze' },
+    { name: 'Open Source Supporter', description: 'Active contributor', level: 'bronze' },
+    { name: 'Polyglot Developer', description: 'Built in 4 different languages', level: 'silver' }
+  ];
+
+  const displayBadges = activeBadges.length > 0 ? activeBadges : defaultBadges;
+
+  return (
+    <g>
+      {displayBadges.map((b, idx) => {
+        const y = idx * 40;
+        const color = b.level === 'gold' ? '#f59e0b' : (b.level === 'silver' ? '#94a3b8' : '#b45309');
+        const firstLetter = b.name ? b.name[0] : '★';
+
+        return (
+          <g key={`badge-${idx}`} transform={`translate(0, ${y})`}>
+            {/* Badge Icon Circle */}
+            <circle cx="12" cy="16" r="12" fill={color} fillOpacity="0.15" stroke={color} strokeWidth="1" />
+            <text x="12" y="20" fill={color} fontSize="10" fontFamily="sans-serif" fontWeight="900" textAnchor="middle">
+              {firstLetter}
+            </text>
+
+            {/* Badge Name */}
+            <text x="32" y="14" fill="#ffffff" fontSize="10" fontFamily="sans-serif" fontWeight="bold">
+              {b.name.toUpperCase()}
+            </text>
+
+            {/* Badge Desc */}
+            <text x="32" y="26" fill="#a8a8a8" fontSize="8" fontFamily="sans-serif">
+              {b.description.length > 34 ? b.description.substring(0, 32) + '..' : b.description}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+};
+
 interface FooterBlocksProps {
   aboutText: string;
   portfolioUrl: string;
@@ -898,6 +1010,7 @@ interface FooterBlocksProps {
   email: string;
   location: string;
   colors: ThemeColors;
+  badges?: any[];
 }
 
 export const FooterBlocks = ({
@@ -906,22 +1019,74 @@ export const FooterBlocks = ({
   websiteUrl,
   email,
   location,
-  colors
+  colors,
+  badges = []
 }: FooterBlocksProps) => {
   return (
     <g>
-      {/* About Box */}
+      {/* 1. Achievements Column (translate 0, 0) */}
       <g transform="translate(0, 0)">
+        <text x="0" y="0" fill={colors.stroke} fontSize="13" fontFamily="sans-serif" fontWeight="800">
+          ACHIEVEMENTS
+        </text>
+        <g transform="translate(0, 20)">
+          <AchievementsList badges={badges} colors={colors} />
+        </g>
+      </g>
+
+      {/* 2. Tech Stack Column (translate 280, 0) */}
+      <g transform="translate(280, 0)">
+        <text x="0" y="0" fill={colors.stroke} fontSize="13" fontFamily="sans-serif" fontWeight="800">
+          TECH STACK
+        </text>
+        
+        {/* Row 1 Icons */}
+        <g transform="translate(0, 25)">
+          {['html', 'css', 'javascript', 'react', 'node', 'python'].map((tech, i) => {
+            const x = i * 40;
+            return (
+              <g key={`tech-${tech}`} transform={`translate(${x}, 0)`}>
+                <rect width="32" height="32" rx="5" fill="#131122" />
+                <g transform="translate(4, 4) scale(1)">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    {TechLogos[tech]}
+                  </svg>
+                </g>
+              </g>
+            );
+          })}
+        </g>
+
+        {/* Row 2 Icons */}
+        <g transform="translate(0, 75)">
+          {['typescript', 'git', 'github', 'vercel', 'figma'].map((tech, i) => {
+            const x = i * 40;
+            return (
+              <g key={`tech-${tech}`} transform={`translate(${x}, 0)`}>
+                <rect width="32" height="32" rx="5" fill="#131122" />
+                <g transform="translate(4, 4) scale(1)">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    {TechLogos[tech]}
+                  </svg>
+                </g>
+              </g>
+            );
+          })}
+        </g>
+      </g>
+
+      {/* 3. About Column (translate 580, 0) */}
+      <g transform="translate(580, 0)">
         <text x="0" y="0" fill={colors.stroke} fontSize="13" fontFamily="sans-serif" fontWeight="800">
           ABOUT
         </text>
-        <text x="0" y="24" fill="#a8a8a8" fontSize="12" fontFamily="sans-serif" width="280">
+        <text x="0" y="24" fill="#a8a8a8" fontSize="11" fontFamily="sans-serif" width="240">
           {aboutText || 'Full Stack Developer | AI & Automation Builder of modern web apps, AI tools, and productivity solutions.'}
         </text>
 
         {/* Code loop block */}
-        <g transform="translate(0, 75)">
-          <rect width="280" height="90" rx="6" fill="#040308" stroke={colors.grid} strokeWidth="0.5" />
+        <g transform="translate(0, 70)">
+          <rect width="240" height="90" rx="6" fill="#040308" stroke={colors.grid} strokeWidth="0.5" />
           <text x="15" y="25" fill={colors.accent1} fontSize="11" fontFamily="monospace">
             while
           </text>
@@ -943,87 +1108,46 @@ export const FooterBlocks = ({
         </g>
       </g>
 
-      {/* Tech Stack Box */}
-      <g transform="translate(360, 0)">
-        <text x="0" y="0" fill={colors.stroke} fontSize="13" fontFamily="sans-serif" fontWeight="800">
-          TECH STACK
-        </text>
-        
-        {/* Row 1 Icons */}
-        <g transform="translate(0, 25)">
-          {['html', 'css', 'javascript', 'react', 'node', 'python'].map((tech, i) => {
-            const x = i * 44;
-            return (
-              <g key={`tech-${tech}`} transform={`translate(${x}, 0)`}>
-                <rect width="36" height="36" rx="6" fill="#131122" />
-                <g transform="translate(6, 6) scale(1)">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    {TechLogos[tech]}
-                  </svg>
-                </g>
-              </g>
-            );
-          })}
-        </g>
-
-        {/* Row 2 Icons */}
-        <g transform="translate(0, 75)">
-          {['typescript', 'git', 'github', 'vercel', 'figma'].map((tech, i) => {
-            const x = i * 44;
-            return (
-              <g key={`tech-${tech}`} transform={`translate(${x}, 0)`}>
-                <rect width="36" height="36" rx="6" fill="#131122" />
-                <g transform="translate(6, 6) scale(1)">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    {TechLogos[tech]}
-                  </svg>
-                </g>
-              </g>
-            );
-          })}
-        </g>
-      </g>
-
-      {/* Connect Box */}
-      <g transform="translate(760, 0)">
+      {/* 4. Connect Column (translate 880, 0) */}
+      <g transform="translate(880, 0)">
         <text x="0" y="0" fill={colors.stroke} fontSize="13" fontFamily="sans-serif" fontWeight="800">
           CONNECT
         </text>
 
         {/* Portfolio link */}
         <g transform="translate(0, 22)">
-          <svg width="16" height="16" viewBox="0 0 24 24" style={{ color: colors.accent1 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" style={{ color: colors.accent1 }}>
             {Icons.globe}
           </svg>
-          <text x="24" y="12" fill="#a8a8a8" fontSize="12" fontFamily="sans-serif">Portfolio:</text>
-          <text x="90" y="12" fill="#ffffff" fontSize="12" fontFamily="monospace">{portfolioUrl}</text>
+          <text x="20" y="11" fill="#a8a8a8" fontSize="11" fontFamily="sans-serif">Portfolio:</text>
+          <text x="75" y="11" fill="#ffffff" fontSize="11" fontFamily="monospace">{portfolioUrl}</text>
         </g>
 
         {/* Website link */}
         <g transform="translate(0, 52)">
-          <svg width="16" height="16" viewBox="0 0 24 24" style={{ color: colors.accent1 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" style={{ color: colors.accent1 }}>
             {Icons.globe}
           </svg>
-          <text x="24" y="12" fill="#a8a8a8" fontSize="12" fontFamily="sans-serif">Website:</text>
-          <text x="90" y="12" fill="#ffffff" fontSize="12" fontFamily="monospace">{websiteUrl}</text>
+          <text x="20" y="11" fill="#a8a8a8" fontSize="11" fontFamily="sans-serif">Website:</text>
+          <text x="75" y="11" fill="#ffffff" fontSize="11" fontFamily="monospace">{websiteUrl}</text>
         </g>
 
         {/* Email link */}
         <g transform="translate(0, 82)">
-          <svg width="16" height="16" viewBox="0 0 24 24" style={{ color: colors.accent1 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" style={{ color: colors.accent1 }}>
             {Icons.mail}
           </svg>
-          <text x="24" y="12" fill="#a8a8a8" fontSize="12" fontFamily="sans-serif">Email:</text>
-          <text x="90" y="12" fill="#ffffff" fontSize="12" fontFamily="monospace">{email}</text>
+          <text x="20" y="11" fill="#a8a8a8" fontSize="11" fontFamily="sans-serif">Email:</text>
+          <text x="75" y="11" fill="#ffffff" fontSize="11" fontFamily="monospace">{email}</text>
         </g>
 
         {/* Location link */}
         <g transform="translate(0, 112)">
-          <svg width="16" height="16" viewBox="0 0 24 24" style={{ color: colors.accent1 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" style={{ color: colors.accent1 }}>
             {Icons.location}
           </svg>
-          <text x="24" y="12" fill="#a8a8a8" fontSize="12" fontFamily="sans-serif">Location:</text>
-          <text x="90" y="12" fill="#ffffff" fontSize="12" fontFamily="sans-serif">{location}</text>
+          <text x="20" y="11" fill="#a8a8a8" fontSize="11" fontFamily="sans-serif">Location:</text>
+          <text x="75" y="11" fill="#ffffff" fontSize="11" fontFamily="sans-serif">{location}</text>
         </g>
       </g>
     </g>

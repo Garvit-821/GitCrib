@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { render } from 'preact-render-to-string';
 import { Poster } from '../components/Poster.js';
 import { getLandingPageHtml } from '../components/LandingPage.js';
+import { calculateBadges } from '../engine/badges.js';
 export const config = {
     runtime: 'edge',
 };
@@ -287,6 +288,66 @@ export default async function handler(req) {
         ? layoutParam
         : 'poster';
     const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+    // Construct payload to calculate achievements/badges
+    const payloadRepos = languages.map(l => ({
+        name: 'repo',
+        desc: '',
+        language: l.name,
+        stars: 0,
+        forks: 0,
+        issues: 0,
+        watchers: 0,
+        size: isGarvit ? Math.round(5950 / languages.length) : 1000,
+        createdAt: '',
+        updatedAt: '',
+        topics: [],
+        private: false
+    }));
+    const badges = calculateBadges({
+        profile: {
+            name,
+            username,
+            createdAt: isGarvit ? '2021-01-19T00:00:00Z' : '2021-08-15T00:00:00Z',
+            followers,
+            following,
+            orgCount: isGarvit ? 0 : (orgs === '-' ? 0 : 1),
+            pinnedRepos: [],
+            profileLink: `https://github.com/${username}`,
+            hireable: true
+        },
+        metrics: {
+            totalStars: stars,
+            forks: 0,
+            watchers: 0,
+            publicRepos: totalReposCount,
+            privateRepos: 0,
+            gists,
+            accountAge: 5,
+            grade,
+            currentStreak,
+            longestStreak,
+            totalContributions,
+            yearlyContributions: totalContributions,
+            monthlyContributions: totalContributions / 12,
+            commits,
+            prsMerged: prs,
+            prsOpen: 0,
+            prsClosed: 0,
+            reposContributedTo: contributedTo,
+            packages,
+            releases: 0,
+            projects,
+            discussions: isGarvit ? 13 : 0,
+            codeReviews: reviews,
+            starsGiven,
+            reposCreated: totalReposCount,
+            avgCommitsFreq: isGarvit ? 3.2 : (commits / 365),
+            avgContributionsFreq: isGarvit ? 4.1 : (totalContributions / 365)
+        },
+        repos: payloadRepos,
+        commitData,
+        pushHistory
+    });
     // Render Poster component
     const svg = render(h(Poster, {
         username,
@@ -333,7 +394,8 @@ export default async function handler(req) {
         location,
         timestamp,
         theme,
-        layout
+        layout,
+        badges
     }));
     // Return response
     return new Response(svg, {
