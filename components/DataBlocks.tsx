@@ -11,8 +11,9 @@ export interface ThemeColors {
 
 // Helper: Format number with commas
 export const formatNum = (n: number | string): string => {
-  if (typeof n === 'string') return n;
-  return n.toLocaleString();
+  const num = typeof n === 'string' ? parseInt(n, 10) : n;
+  if (isNaN(num)) return n.toString();
+  return num.toLocaleString();
 };
 
 // SVG Path Icons
@@ -397,7 +398,7 @@ export const SimpleMetricCard = ({ value, label, subLabel, colors }: SimpleMetri
     <g>
       <rect width="148" height="110" rx="10" fill={colors.cardBg} stroke={colors.grid} strokeWidth="1" />
       <text x="74" y="52" fill="#ffffff" fontSize="28" fontFamily="monospace" fontWeight="900" textAnchor="middle">
-        {value}
+        {formatNum(value)}
       </text>
       <text x="74" y="80" fill={colors.stroke} fontSize="9" fontFamily="sans-serif" fontWeight="700" textAnchor="middle">
         {label}

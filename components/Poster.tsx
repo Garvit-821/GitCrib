@@ -246,7 +246,7 @@ export const Poster = ({
           {/* POSTER LAYOUT (1200x1600) */}
           
           {/* 1. Header (y: 55) */}
-          <g transform="translate(40, 55)">
+          <g id="header-block" transform="translate(40, 55)">
             <ProfileHeader
               username={username}
               name={name}
@@ -264,38 +264,40 @@ export const Poster = ({
           </g>
 
           {/* 2. Row 2 (y: 205): 7 side-by-side circular stats cards */}
-          <g transform="translate(40, 205)">
-            <GradeCard grade={grade} colors={colors} />
-          </g>
-          <g transform="translate(204, 205)">
-            <SimpleMetricCard value={stars} label="Total Stars" colors={colors} />
-          </g>
-          <g transform="translate(368, 205)">
-            <SimpleMetricCard value={commits} label="Total Commits" subLabel="Last Year" colors={colors} />
-          </g>
-          <g transform="translate(532, 205)">
-            <SimpleMetricCard value={prs} label="Total PRs" colors={colors} />
-          </g>
-          <g transform="translate(696, 205)">
-            <SimpleMetricCard value={totalContributions} label="Total Contributions" subLabel={joinedDate + " - Present"} colors={colors} />
-          </g>
-          <g transform="translate(860, 205)">
-            <StreakCard title="Current Streak" value={currentStreak} dateRange={streakDateRange} isCurrent={true} colors={colors} />
-          </g>
-          <g transform="translate(1024, 205)">
-            <StreakCard title="Longest Streak" value={longestStreak} dateRange={longestStreakDateRange} isCurrent={false} colors={colors} />
+          <g id="metrics-grid">
+            <g transform="translate(40, 205)">
+              <GradeCard grade={grade} colors={colors} />
+            </g>
+            <g transform="translate(204, 205)">
+              <SimpleMetricCard value={stars} label="Total Stars" colors={colors} />
+            </g>
+            <g transform="translate(368, 205)">
+              <SimpleMetricCard value={commits} label="Total Commits" subLabel="Last Year" colors={colors} />
+            </g>
+            <g transform="translate(532, 205)">
+              <SimpleMetricCard value={prs} label="Total PRs" colors={colors} />
+            </g>
+            <g transform="translate(696, 205)">
+              <SimpleMetricCard value={totalContributions} label="Total Contributions" subLabel={joinedDate + " - Present"} colors={colors} />
+            </g>
+            <g transform="translate(860, 205)">
+              <StreakCard title="Current Streak" value={currentStreak} dateRange={streakDateRange} isCurrent={true} colors={colors} />
+            </g>
+            <g transform="translate(1024, 205)">
+              <StreakCard title="Longest Streak" value={longestStreak} dateRange={longestStreakDateRange} isCurrent={false} colors={colors} />
+            </g>
           </g>
 
           {/* 3. Row 3 (y: 335): Contributions Line Chart (left) + Green Heatmap (right) */}
           <g transform="translate(40, 335)">
             <ContributionGraph history={contributionsHistory} colors={colors} />
           </g>
-          <g transform="translate(610, 335)">
+          <g id="central-radial-heatmap" transform="translate(610, 335)">
             <CalendarHeatmap commitData={commitData} colors={colors} isGreen={true} title="CONTRIBUTIONS IN THE LAST YEAR" />
           </g>
 
           {/* 4. Row 4 (y: 575): Languages (left) + Top Repos (middle) + Activity Summary (right) */}
-          <g transform="translate(40, 575)">
+          <g id="language-spectrogram" transform="translate(40, 575)">
             <LanguagesDonut languages={languages} colors={colors} />
           </g>
           <g transform="translate(400, 575)">
