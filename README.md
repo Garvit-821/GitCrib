@@ -143,3 +143,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### 🛠️ Documentation Version History
 *   **v1.0.1**: Improve typography in features section.
 *   **v1.0.2**: Clarify local development environment requirements.
+*   **v1.0.3**: Format API query parameters table structure.
