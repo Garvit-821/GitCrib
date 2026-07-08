@@ -142,3 +142,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <!-- doc-updates-marker -->
 ### 🛠️ Documentation Version History
 *   **v1.0.1**: Improve typography in features section.
+*   **v1.0.2**: Clarify local development environment requirements.
