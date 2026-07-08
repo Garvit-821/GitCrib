@@ -87,9 +87,6 @@ Customize your blueprint embeds using URL query parameters:
 
 ## ⚡ Deployment
 
-### Live Instance
-You can access the live instance of GitCrib at: [https://git-crib.vercel.app/](https://git-crib.vercel.app/)
-
 ### Vercel Deployment (Coming Soon)
 A one-click deploy button to run your own instance of the GitCrib API on Vercel Serverless/Edge functions will be available soon.
 
@@ -139,25 +136,6 @@ A record of technical challenges faced during development and the engineering so
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 
-<!-- doc-updates-marker -->
-### 🛠️ Documentation Version History
-*   **v1.0.1**: Improve typography in features section.
-*   **v1.0.2**: Clarify local development environment requirements.
-*   **v1.0.3**: Format API query parameters table structure.
-*   **v1.0.4**: Add descriptive labels for theme visual settings.
-*   **v1.0.5**: Add mobile viewport coordinates configuration detail.
-*   **v1.0.6**: Document canvas rendering options for JPG/PNG exports.
-*   **v1.0.7**: Document vector math-driven charts coordinates mapping.
-*   **v1.0.8**: Enhance readability of achievement badges description.
-*   **v1.0.9**: Clarify tech stack matrix scanning process.
-*   **v1.0.10**: Clarify fallback scraping logic workflow.
-*   **v1.0.11**: Add quick-start setup notes for prerequisites.
-*   **v1.0.12**: Document Vercel configuration override warnings.
-*   **v1.0.13**: Add detail on local testing suite execution.
-*   **v1.0.14**: Clarify contribution guidelines workflow steps.
-*   **v1.0.15**: Document Base64 avatar conversion resolution context.
-*   **v1.0.16**: Document coordinate spacing adjustments for header layout.
-*   **v1.0.17**: Add link reference validation details.
-*   **v1.0.18**: Document template literal escaping issue and fix.
-*   **v1.0.19**: Add live deployment verification status log.
-*   **v1.0.20**: Finalize documentation structure formatting.
+
+
+
