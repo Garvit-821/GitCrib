@@ -4,7 +4,7 @@
 
 ![GitCrib Blueprint Demo](./demo-gitcrib.png)
 
-GitCrib is an open-source data-infographic poster and banner creator designed to run fully inside the **Vercel Edge Runtime** using TypeScript, Preact, and zero external rendering engines. It ingests dense GitHub payloads and translates metrics into highly structured, glassmorphic technical blueprints with zero layout overlapping.
+GitCrib is an open-source data-infographic poster and banner creator designed to run fully inside **Netlify Functions** using TypeScript, Preact, and zero external rendering engines. It ingests dense GitHub payloads and translates metrics into highly structured, glassmorphic technical blueprints with zero layout overlapping.
 
 ---
 
@@ -87,8 +87,13 @@ Customize your blueprint embeds using URL query parameters:
 
 ## ⚡ Deployment
 
-### Vercel Deployment (Coming Soon)
-A one-click deploy button to run your own instance of the GitCrib API on Vercel Serverless/Edge functions will be available soon.
+### Netlify Deployment
+You can host and deploy GitCrib easily on Netlify using the preconfigured `netlify.toml` and Serverless Functions configuration.
+
+To deploy your own:
+1. Connect your GitCrib repository to a new site on Netlify.
+2. The build settings will automatically be populated from `netlify.toml` (Build Command: `npm run build`, Publish Directory: `dist`).
+3. The redirect rules will automatically route all incoming traffic to the serverless API.
 
 ---
 
@@ -130,13 +135,13 @@ A record of technical challenges faced during development and the engineering so
 *   **Symptom/Cause**: Nested backticks (`` ` ``) and string interpolation markers (`${}`) inside client-side JS scripts broke string matching and triggered compilation errors inside the parent landing page template string literal.
 *   **Solution**: Escaped all nested template literal elements (e.g., as `` \`image/\${format}\` ``) in `components/LandingPage.ts` to keep the TypeScript compiler and edge builder happy.
 
-### 5. Vercel Build Hanging on `node server.js`
-*   **Symptom/Cause**: The Vercel build logs would get stuck indefinitely during deployment while executing `"node server.js"`. This happened because Vercel automatically detected the `server.js` file in the root directory and attempted to run it as a persistent Node.js server process that listens on a port and never terminates.
-*   **Solution**: Renamed the local-only testing server entry point from `server.js` to `dev-server.js` and added a `dev` script (`tsc && node dev-server.js`) in `package.json`. This bypassed Vercel's automatic root server detection and allowed the build process to complete.
+### 5. Build Hanging on `node server.js`
+*   **Symptom/Cause**: The build logs would get stuck indefinitely during deployment while executing `"node server.js"`. This happened because serverless platforms automatically detected the `server.js` file in the root directory and attempted to run it as a persistent Node.js server process that listens on a port and never terminates.
+*   **Solution**: Renamed the local-only testing server entry point from `server.js` to `dev-server.js` and added a `dev` script (`tsc && node dev-server.js`) in `package.json`. This bypassed automatic root server detection and allowed the build process to complete.
 
-### 6. Safe Environment Variables & Edge Runtime Diagnostics
-*   **Symptom/Cause**: Accessing standard Node.js globals like `process` directly in Vercel Edge Runtime can trigger `ReferenceError: process is not defined` because Edge uses a lightweight V8 engine instead of a full Node.js runtime. Additionally, serverless function crashes lacked detailed diagnostic traces in the browser.
-*   **Solution**: Handled environment variables with defensive inline checks and wrapped the main Edge handler in a global `try/catch` block that outputs structured stack traces on failure, enabling real-time debugging.
+### 6. Safe Environment Variables & Serverless Diagnostics
+*   **Symptom/Cause**: Accessing standard Node.js globals like `process` directly in restricted serverless runtimes can trigger `ReferenceError: process is not defined` if the engine is lightweight and lacks full Node.js shims. Additionally, serverless function crashes lacked detailed diagnostic traces in the browser.
+*   **Solution**: Handled environment variables with defensive inline checks and wrapped the main handler in a global `try/catch` block that outputs structured stack traces on failure, enabling real-time debugging.
 
 ---
 
