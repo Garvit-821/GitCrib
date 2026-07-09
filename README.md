@@ -130,6 +130,14 @@ A record of technical challenges faced during development and the engineering so
 *   **Symptom/Cause**: Nested backticks (`` ` ``) and string interpolation markers (`${}`) inside client-side JS scripts broke string matching and triggered compilation errors inside the parent landing page template string literal.
 *   **Solution**: Escaped all nested template literal elements (e.g., as `` \`image/\${format}\` ``) in `components/LandingPage.ts` to keep the TypeScript compiler and edge builder happy.
 
+### 5. Vercel Build Hanging on `node server.js`
+*   **Symptom/Cause**: The Vercel build logs would get stuck indefinitely during deployment while executing `"node server.js"`. This happened because Vercel automatically detected the `server.js` file in the root directory and attempted to run it as a persistent Node.js server process that listens on a port and never terminates.
+*   **Solution**: Renamed the local-only testing server entry point from `server.js` to `dev-server.js` and added a `dev` script (`tsc && node dev-server.js`) in `package.json`. This bypassed Vercel's automatic root server detection and allowed the build process to complete.
+
+### 6. Safe Environment Variables & Edge Runtime Diagnostics
+*   **Symptom/Cause**: Accessing standard Node.js globals like `process` directly in Vercel Edge Runtime can trigger `ReferenceError: process is not defined` because Edge uses a lightweight V8 engine instead of a full Node.js runtime. Additionally, serverless function crashes lacked detailed diagnostic traces in the browser.
+*   **Solution**: Handled environment variables with defensive inline checks and wrapped the main Edge handler in a global `try/catch` block that outputs structured stack traces on failure, enabling real-time debugging.
+
 ---
 
 ## 📄 License
