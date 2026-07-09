@@ -249,7 +249,7 @@ export function getLandingPageHtml(): string {
       max-width: 1200px;
       width: 100%;
       margin: 0 auto;
-      padding: 0 2rem 96px 2rem;
+      padding: 48px 2rem 96px 2rem;
       display: grid;
       grid-template-columns: 420px 1fr;
       gap: 24px;
@@ -354,8 +354,15 @@ export function getLandingPageHtml(): string {
       border-color: var(--color-primary-glow);
     }
 
+    .panel-divider {
+      border: 0;
+      height: 1px;
+      background: var(--color-hairline-strong);
+      margin: 4px 0;
+    }
+
     .actions-panel {
-      margin-top: 12px;
+      margin-top: 4px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -643,7 +650,7 @@ export function getLandingPageHtml(): string {
       }
 
       .main-container {
-        padding: 0 1.5rem 48px 1.5rem;
+        padding: 24px 1.5rem 48px 1.5rem;
         gap: 16px;
       }
 
@@ -774,6 +781,8 @@ export function getLandingPageHtml(): string {
         <input type="checkbox" id="gemini-ai" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--color-primary-glow); margin: 0;">
         <label for="gemini-ai" style="margin: 0; cursor: pointer; font-size: 14px; font-weight: 500;">Enable Gemini AI Insights ✨</label>
       </div>
+
+      <hr class="panel-divider">
 
       <div class="actions-panel">
         <div class="panel-section-title">Export Workspace</div>
