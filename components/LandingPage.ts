@@ -608,6 +608,84 @@ export function getLandingPageHtml(): string {
     footer.page-footer a:hover {
       text-decoration: underline;
     }
+
+    /* Mobile Responsiveness Improvements */
+    @media (max-width: 768px) {
+      .top-nav {
+        flex-direction: column;
+        height: auto;
+        padding: 1.25rem 1rem;
+        gap: 0.75rem;
+      }
+
+      .nav-links {
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .hero-section {
+        padding: 60px 1.5rem 40px 1.5rem;
+      }
+
+      .hero-subtitle {
+        font-size: 16px;
+        margin-bottom: 1.5rem;
+      }
+
+      .hero-badges {
+        gap: 8px;
+      }
+
+      .hero-badge {
+        font-size: 11px;
+        padding: 4px 10px;
+      }
+
+      .main-container {
+        padding: 0 1.5rem 48px 1.5rem;
+        gap: 16px;
+      }
+
+      .control-panel {
+        padding: 20px;
+        gap: 16px;
+      }
+
+      .terminal-mockup {
+        padding: 12px;
+        border-radius: 12px;
+      }
+
+      .preview-wrapper {
+        min-height: auto;
+      }
+
+      footer.page-footer {
+        padding: 32px 16px;
+        font-size: 12px;
+      }
+
+      .modal {
+        padding: 28px 20px;
+      }
+
+      .modal-title {
+        font-size: 20px;
+      }
+
+      .modal-description {
+        font-size: 13px;
+        margin-bottom: 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 28px !important;
+        letter-spacing: -0.5px;
+      }
+    }
   </style>
 </head>
 <body>
