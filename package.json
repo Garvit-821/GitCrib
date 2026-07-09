@@ -5,7 +5,8 @@
   "main": "api/index.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "dev": "tsc && node dev-server.js"
   },
   "dependencies": {
     "preact": "^10.22.0",

@@ -51,7 +51,7 @@ GitCrib is an open-source data-infographic poster and banner creator designed to
 
 3. Launch the development server:
    ```bash
-   node server.js
+   npm run dev
    ```
    Open [http://localhost:3000](http://localhost:3000) to view the interactive landing page.
 
